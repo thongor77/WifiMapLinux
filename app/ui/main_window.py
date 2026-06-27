@@ -95,6 +95,10 @@ class MainWindow(QMainWindow):
         self.building_panel.floor_deleted.connect(self._on_entity_deleted)
         self.ap_panel.ap_deleted.connect(self._on_ap_panel_changed)
         self.ap_panel.ap_edited.connect(self._on_ap_panel_changed)
+        self.ap_panel.ap_highlight_requested.connect(self.floor_plan_widget.highlight_ap)
+        self.ap_panel.ap_unhighlight_requested.connect(self.floor_plan_widget.stop_highlight_ap)
+        self.ap_panel.ap_move_requested.connect(self._on_ap_move_requested)
+        self.floor_plan_widget.ap_moved.connect(self._on_ap_moved)
         self.floor_tab_bar.floor_selected.connect(self._on_floor_selected)
         self.floor_plan_widget.calibration_ready.connect(self._on_calibration_points)
         self.floor_plan_widget.position_selected.connect(self._on_position_selected)
@@ -260,7 +264,7 @@ class MainWindow(QMainWindow):
             select(AccessPoint).where(AccessPoint.floor_id == floor_id)
         ).all()
         for ap in aps:
-            self.floor_plan_widget.add_ap_marker(ap.x_px, ap.y_px, ap.label)
+            self.floor_plan_widget.add_ap_marker(ap.id, ap.x_px, ap.y_px, ap.label)
 
     def _load_measurement_markers(self, floor_id: int, session):
         points = session.exec(
@@ -589,10 +593,28 @@ class MainWindow(QMainWindow):
             )
             session.add(ap)
             session.commit()
-        self.floor_plan_widget.add_ap_marker(pos.x(), pos.y(), label)
+            session.refresh(ap)
+            ap_id = ap.id
+        self.floor_plan_widget.add_ap_marker(ap_id, pos.x(), pos.y(), label)
         self.ap_panel.refresh()
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
+
+    def _on_ap_move_requested(self, ap_id: int):
+        self.floor_plan_widget.start_move_ap_mode(ap_id)
+        self.statusBar().showMessage("Cliquez sur la nouvelle position de l'AP")
+
+    def _on_ap_moved(self, ap_id: int, pos):
+        from ..models.access_point import AccessPoint
+        with get_session() as session:
+            ap = session.get(AccessPoint, ap_id)
+            if ap:
+                ap.x_px = pos.x()
+                ap.y_px = pos.y()
+                session.add(ap)
+                session.commit()
+        self._on_ap_panel_changed(self._current_floor_id)
+        self.statusBar().showMessage("AP repositionné")
 
     def _on_ap_panel_changed(self, floor_id: int):
         if floor_id != self._current_floor_id:

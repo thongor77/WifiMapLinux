@@ -10,11 +10,6 @@ from ..models.database import get_session
 from .dialogs.ap_dialog import APDialog
 
 _ROLE = Qt.ItemDataRole.UserRole
-_BANDS = {
-    lambda f: f < 3000: "2.4 GHz",
-    lambda f: 3000 <= f < 6000: "5 GHz",
-    lambda f: f >= 6000: "6 GHz",
-}
 
 
 def _band(freq_mhz: float) -> str:
@@ -26,8 +21,11 @@ def _band(freq_mhz: float) -> str:
 
 
 class APPanel(QWidget):
-    ap_deleted = Signal(int)   # floor_id — caller refreshes markers + sim
-    ap_edited  = Signal(int)   # floor_id — caller refreshes markers + sim
+    ap_deleted            = Signal(int)   # floor_id
+    ap_edited             = Signal(int)   # floor_id
+    ap_highlight_requested = Signal(int)  # ap_id  → start blink
+    ap_unhighlight_requested = Signal()   # → stop blink
+    ap_move_requested     = Signal(int)   # ap_id  → enter move mode
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -53,14 +51,19 @@ class APPanel(QWidget):
         self._list.itemDoubleClicked.connect(self._on_edit)
         layout.addWidget(self._list)
 
-        self._btn_edit = QPushButton("Modifier")
+        self._btn_edit   = QPushButton("Modifier")
+        self._btn_move   = QPushButton("↖  Déplacer")
         self._btn_delete = QPushButton("✕  Supprimer AP")
-        self._btn_edit.setEnabled(False)
-        self._btn_delete.setEnabled(False)
+        for btn in (self._btn_edit, self._btn_move, self._btn_delete):
+            btn.setEnabled(False)
         self._btn_delete.setStyleSheet("color: #c0392b;")
+
         self._btn_edit.clicked.connect(self._on_edit)
+        self._btn_move.clicked.connect(self._on_move)
         self._btn_delete.clicked.connect(self._on_delete)
+
         layout.addWidget(self._btn_edit)
+        layout.addWidget(self._btn_move)
         layout.addWidget(self._btn_delete)
 
     # ── Public API ────────────────────────────────────────────────────────
@@ -77,8 +80,8 @@ class APPanel(QWidget):
         self._floor_id = None
         self._floor_lbl.setText("—")
         self._list.clear()
-        self._btn_edit.setEnabled(False)
-        self._btn_delete.setEnabled(False)
+        for btn in (self._btn_edit, self._btn_move, self._btn_delete):
+            btn.setEnabled(False)
 
     # ── Internals ─────────────────────────────────────────────────────────
 
@@ -106,8 +109,12 @@ class APPanel(QWidget):
 
     def _on_selection(self):
         has = bool(self._list.selectedItems())
-        self._btn_edit.setEnabled(has)
-        self._btn_delete.setEnabled(has)
+        for btn in (self._btn_edit, self._btn_move, self._btn_delete):
+            btn.setEnabled(has)
+        if has:
+            self.ap_highlight_requested.emit(self._selected_ap_id())
+        else:
+            self.ap_unhighlight_requested.emit()
 
     def _on_edit(self, *_):
         ap_id = self._selected_ap_id()
@@ -132,6 +139,11 @@ class APPanel(QWidget):
             session.commit()
         self._refresh()
         self.ap_edited.emit(self._floor_id)
+
+    def _on_move(self):
+        ap_id = self._selected_ap_id()
+        if ap_id is not None:
+            self.ap_move_requested.emit(ap_id)
 
     def _on_delete(self):
         ap_id = self._selected_ap_id()
