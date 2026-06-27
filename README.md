@@ -2,6 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/UI-PySide6%20%28Qt6%29-41cd52.svg)](https://doc.qt.io/qtforpython/)
+[![AUR](https://img.shields.io/aur/version/wifimaplinux.svg)](https://aur.archlinux.org/packages/wifimaplinux)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate/?business=JFQGY7NU3ANCN&no_recurring=0&item_name=Every+donation%2C+no+matter+how+small%2C+helps+me+keep+this+project+alive.+Thank+you%21%0A&currency_code=EUR)
 [![Bitcoin](https://img.shields.io/badge/Donate-Bitcoin-orange.svg)](#support-the-project)
@@ -18,6 +19,8 @@ Measure real-world coverage across a multi-floor house, generate heatmaps, simul
 - **Multi-floor navigation** — per-floor tabs, visual inter-floor alignment, interpolated vertical cross-section
 - **Overlay comparison** — measured heatmap vs. simulated heatmap side by side
 - **Export** — annotated PNG (plan + heatmap) and multi-page PDF coverage report
+- **Bilingual** — French and English UI (Settings → Language, restart to apply)
+- **Integrated help** — Help menu (F1) with guided topics for every workflow
 
 ## Target audience
 
@@ -46,11 +49,29 @@ See [`docs/Roadmap.md`](docs/Roadmap.md) for the version history and next steps.
 
 ## Installation
 
+### Arch Linux — AUR
+
+```bash
+# with yay
+yay -S wifimaplinux
+
+# with paru
+paru -S wifimaplinux
+```
+
+After install, launch with:
+
+```bash
+wifimaplinux
+```
+
+### Manual (any Linux distro)
+
 ```bash
 git clone https://github.com/thongor77/WifiMapLinux.git
 cd WifiMapLinux
 python -m venv .venv --system-site-packages
-.venv/bin/pip install sqlmodel numpy pillow
+.venv/bin/pip install -r requirements.txt
 .venv/bin/python main.py
 ```
 
@@ -62,19 +83,21 @@ python -m venv .venv --system-site-packages
 
 ## Quick start
 
-1. **Create a house** — left panel → "+ New house" then "+ New floor"
+1. **Create a house** — left panel → "New building" then "New floor"
 2. **Import a plan** — "Import PNG floor plan" → calibrate the scale (2 clicks + real-world distance)
 3. **Measure** — "Measure Wi-Fi" → click your position on the floor plan
 4. **Visualise** — enable "Heatmap" in the bottom bar
 5. **Simulate** — "Place virtual AP" → enable "Simulation"
 6. **Export** — Export menu → PNG or PDF
 
+Press **F1** or open **Help → Help…** at any time for step-by-step guidance on each workflow.
+
 ## Source structure
 
 ```
 app/
 ├── models/          — SQLModel: Building, Floor, FloorPlan, MeasurementPoint, AccessPoint
-├── services/        — IDW, LDPL propagation, Wi-Fi scanner, Pillow export
+├── services/        — IDW, LDPL propagation, Wi-Fi scanner, Pillow export, i18n, settings
 └── ui/
     ├── main_window.py
     ├── floor_plan_widget.py   — QGraphicsView: floor plan + heatmaps + markers
@@ -82,7 +105,8 @@ app/
     ├── heatmap_controls.py    — control bar (heatmap, simulation, opacity, section)
     ├── building_panel.py      — house/floor tree + action buttons
     ├── floor_tab_bar.py       — per-floor tab navigation
-    └── dialogs/               — FloorDialog, ScanDialog, AlignmentDialog, APDialog
+    └── dialogs/               — FloorDialog, ScanDialog, AlignmentDialog, APDialog,
+                                  AboutDialog, HelpDialog
 ```
 
 ## Support the project
@@ -100,4 +124,4 @@ Both projects are independent and share no code.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE)
