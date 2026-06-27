@@ -446,6 +446,46 @@ class MainWindow(QMainWindow):
     # ── Measure flow ──────────────────────────────────────────────────────
 
     def _on_measure_requested(self, _floor_id: int):
+        from PySide6.QtWidgets import QInputDialog
+        if self._current_floor_id is None:
+            return
+
+        with get_session() as session:
+            floor = session.get(Floor, self._current_floor_id)
+            if not floor:
+                return
+            floors = session.exec(
+                select(Floor)
+                .where(Floor.building_id == floor.building_id)
+                .order_by(Floor.index)
+            ).all()
+            available = [
+                (f.id, f.label)
+                for f in floors
+                if session.exec(
+                    select(FloorPlan).where(FloorPlan.floor_id == f.id)
+                ).first() is not None
+            ]
+
+        if len(available) > 1:
+            labels = [lbl for _, lbl in available]
+            current_idx = next(
+                (i for i, (fid, _) in enumerate(available) if fid == self._current_floor_id),
+                0,
+            )
+            label, ok = QInputDialog.getItem(
+                self, "Mesure Wi-Fi",
+                "Sur quel étage vous trouvez-vous actuellement ?",
+                labels, current_idx, False,
+            )
+            if not ok:
+                return
+            chosen_id = next(fid for fid, lbl in available if lbl == label)
+            if chosen_id != self._current_floor_id:
+                self._on_floor_selected(chosen_id)
+                self.floor_tab_bar.set_active(chosen_id)
+                self.building_panel.refresh(reselect_floor_id=chosen_id)
+
         self.floor_plan_widget.start_measure_mode()
         self.statusBar().showMessage("📡  Cliquez sur votre position actuelle sur le plan")
 
