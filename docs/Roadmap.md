@@ -1,95 +1,95 @@
 # WifiMapLinux — Roadmap
 
-> Dernière mise à jour : 2026-06-11
-> V1 complète. V1.1→V1.5 terminées et testées.
+> Last updated: 2026-06-27
+> V2 complete.
 
 ---
 
-## Vue d'ensemble
+## Overview
 
-| Version | Périmètre | État |
-|---------|-----------|------|
-| **Phase archi** | Architecture, modèles, décisions techniques | ✅ Terminé |
-| **V1** | Import plans · Mesures Wi-Fi · Heatmap 2D · Multi-étages · Coupe verticale | ✅ Terminé |
-| **V2** | Simulation · Interpolation avancée · Export | 📋 Planifié |
-| **V3** | Visualisation 3D | 📋 Planifié |
-| **Post-V3** | Conseils de placement AP · Simulation · Packaging PyInstaller | 💭 Différé |
-
----
-
-## V1 — Application fonctionnelle
-
-Objectif : l'utilisateur peut mesurer sa couverture Wi-Fi sur une maison multi-étages
-et voir le résultat en heatmap 2D + coupe verticale.
-
-### V1.1 — Import plans ✅
-
-### V1.2 — Mesures Wi-Fi ✅
-
-### V1.3 — Heatmap 2D ✅
-
-### V1.4 — Multi-étages ✅
-
-### V1.5 — Coupe verticale ✅
-
-- Ligne de coupe 2 clics sur le plan (jaune pointillée)
-- `SectionView` en bas du plan : bandes par étage colorées RSSI, axe distance en mètres
-- Mise à jour automatique au changement de mesure ou de filtre SSID
+| Version | Scope | Status |
+|---------|-------|--------|
+| **Arch phase** | Architecture, data models, technical decisions | ✅ Done |
+| **V1** | Floor plan import · Wi-Fi measurements · 2D heatmap · Multi-floor · Vertical section | ✅ Done |
+| **V2** | Simulation · Advanced interpolation · Export | ✅ Done |
+| **V3** | 3D visualisation | 📋 Planned |
+| **Post-V3** | AP placement advisor · PyInstaller packaging | 💭 Deferred |
 
 ---
 
-## V2 — Enrichissement
+## V1 — Functional application
+
+Goal: user can measure Wi-Fi coverage across a multi-floor house
+and view results as a 2D heatmap + vertical cross-section.
+
+### V1.1 — Floor plan import ✅
+
+### V1.2 — Wi-Fi measurements ✅
+
+### V1.3 — 2D heatmap ✅
+
+### V1.4 — Multi-floor ✅
+
+### V1.5 — Vertical cross-section ✅
+
+- 2-click cut line on the floor plan (dashed yellow)
+- `SectionView` below the plan: per-floor RSSI-coloured bands, distance axis in metres
+- Auto-refresh on measurement change or SSID filter change
+
+---
+
+## V2 — Enrichment
 
 ### V2.1 — Simulation ✅
 
-- Placement d'APs virtuels sur les plans d'étage (`AccessPoint` SQLite)
-- Modèle Log-Distance Path Loss 3D — `app/services/propagation.py` (ITU-R P.1238, n=3.0, FAF par étage ADR-004)
-- Heatmap simulée par étage (même rendu que V1.3, couche z=4 sous la heatmap mesurée z=5)
-- Superposition simulation / mesures réelles : toggle "Simulation" indépendant du toggle "Heatmap"
+- Virtual AP placement on floor plans (`AccessPoint` in SQLite)
+- Log-Distance Path Loss 3D model — `app/services/propagation.py` (ITU-R P.1238, n=3.0, per-floor FAF from ADR-004)
+- Simulated heatmap per floor (same rendering as V1.3, layer z=4 below measured heatmap z=5)
+- Simulation / measured overlay: "Simulation" toggle independent of "Heatmap" toggle
 
-### V2.2 — Interpolation avancée ✅
+### V2.2 — Advanced interpolation ✅
 
-INC-04 résolu → ADR-006 : Option A (IDW 2D par étage + interpolation linéaire verticale).
-- `SectionView` refondu : image 2D (ch × N) construite par lerp vectorisé entre midpoints d'étages
-- Les transitions entre étages sont désormais des dégradés continus (plus de bandes nettes)
-- Un étage sans mesures est traversé par l'interpolation entre ses voisins
-- IDW 2D par étage inchangé (heatmap plan reste indépendante par étage)
+INC-04 resolved → ADR-006: Option A (per-floor 2D IDW + vertical linear interpolation).
+- `SectionView` rebuilt: 2D image (ch × N) built by vectorised lerp between floor midpoints
+- Floor transitions are now continuous gradients (no more hard bands)
+- A floor without measurements is traversed by interpolation between its neighbours
+- Per-floor 2D IDW unchanged (floor plan heatmap remains independent per floor)
 
 ### V2.3 — Export ✅
 
-- Export PNG : plan + heatmap overlay annotés (Pillow) — menu Export › PNG (Ctrl+E)
-  - Exporte la heatmap active (mesurée ou simulée selon les toggles)
-  - Bannière : maison, étage, SSID, stats RSSI, date
-- Export PDF : rapport de couverture multi-pages — menu Export › PDF (Ctrl+Shift+E)
-  - Page de résumé : tableau par étage (points, RSSI min/moy/max)
-  - Une page par étage : plan + heatmap mesurée + bannière
-  - Généré avec Pillow (1200 px/page, 150 DPI)
+- PNG export: annotated plan + heatmap overlay (Pillow) — Export menu › PNG (Ctrl+E)
+  - Exports the active heatmap (measured or simulated depending on toggles)
+  - Banner: house, floor, SSID, RSSI stats, date
+- PDF export: multi-page coverage report — Export menu › PDF (Ctrl+Shift+E)
+  - Summary page: per-floor table (measurement points, RSSI min/avg/max)
+  - One page per floor: plan + measured heatmap + banner
+  - Generated with Pillow (1200 px/page, 150 DPI)
 
 ---
 
-## V3 — Visualisation 3D
+## V3 — 3D visualisation
 
-Technologie à décider (INC-04 adjacente) :
-- Qt3D (natif PySide6) — intégration propre mais API complexe
-- vispy — librairie Python OpenGL légère, bonne pour les volumes de données
-- matplotlib 3D — simple mais limité et lent pour l'interactivité
+Technology to be decided:
+- Qt3D (native PySide6) — clean integration but complex API
+- vispy — lightweight Python OpenGL library, good for volume data
+- matplotlib 3D — simple but limited and slow for interactivity
 
-Périmètre envisagé :
-- Volume voxel 3D de la maison (grilles 2D par étage empilées)
-- Navigation : rotation, sélection d'étage, transparence
-- Synchronisation avec la vue 2D par étage
-
----
-
-## Post-V3 (différé)
-
-- **Conseils de placement AP** : détection zones faibles, clustering, recommandation position
-- **Packaging** : PyInstaller → binaire unique Linux
-- **Export SVG** : import plan avec détection automatique de murs
-- **Module Rust (PyO3)** : si besoin de performance sur propagation/interpolation
+Planned scope:
+- 3D voxel volume of the house (2D grids per floor stacked)
+- Navigation: rotation, floor selection, transparency
+- Synchronisation with the per-floor 2D view
 
 ---
 
-## Prochaines tâches immédiates
+## Post-V3 (deferred)
 
-V2 complète. Démarrer **V3** (visualisation 3D) ou **Post-V3** (advisor zones faibles) selon priorité.
+- **AP placement advisor**: weak zone detection, clustering, position recommendation (threshold from ADR-005)
+- **Packaging**: PyInstaller → single Linux binary
+- **SVG export**: floor plan import with automatic wall detection
+- **Rust module (PyO3)**: if performance is needed for propagation/interpolation
+
+---
+
+## Next steps
+
+V2 complete. Start **V3** (3D visualisation) or **Post-V3** (weak zone advisor) depending on priority.
