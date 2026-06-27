@@ -211,8 +211,10 @@ class MainWindow(QMainWindow):
             cur_path = cur_fp.image_path
             ref_scale = ref_fp.scale_px_per_m
             cur_scale = cur_fp.scale_px_per_m
+            saved_offset = (cur_floor.offset_x_m, cur_floor.offset_y_m)
 
-        dialog = AlignmentDialog(ref_path, cur_path, ref_scale, cur_scale, self)
+        dialog = AlignmentDialog(ref_path, cur_path, ref_scale, cur_scale,
+                                 initial_offset_m=saved_offset, parent=self)
         if dialog.exec():
             ox_m, oy_m = dialog.offset_m()
             with get_session() as session:
