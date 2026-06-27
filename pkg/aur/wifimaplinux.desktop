@@ -2,7 +2,7 @@
 Name=WifiMapLinux
 Comment=Multi-floor residential Wi-Fi mapping tool
 Exec=wifimaplinux
-Icon=network-wireless
+Icon=wifimaplinux
 Terminal=false
 Type=Application
 Categories=Network;Utility;

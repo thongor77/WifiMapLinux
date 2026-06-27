@@ -22,9 +22,11 @@ makedepends=(
 source=(
     "${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
     'wifimaplinux.desktop'
+    'wifimaplinux.svg'
 )
 b2sums=('64c9ee67c7b4d821ed17a40c0cdf069150012b763eec4e2cc7efb49f42dc584f2f44cbf7a4a244ae46d0349cd56e9f624b237c5031cb1250c9511bbb87a5c00e'
-        'bcde975d6dc0783be2992a6061e43e12a4ac130e7a98181e179eaede33ffba6730fe63d3cd42d7264647373e4ff4d906bc765e388688351d01a50097e592345d')
+        '8d3e9d3eb41e88f2e7c587708f0d25cf882432db46590138d40559a9795534c520119da62056be4661ca55e31cb7758d4e4ef1ce75daad982de87693d069aea3'
+        '871a417a9ab21c1ea9303e7a871e98a6590f70a0408209421f7dad024384b6e8bdbead87d9820e7d32758648113efabbd98534b8ee1151543a733e7bd3f56162')
 
 build() {
     cd "WifiMapLinux-${pkgver}"
@@ -38,4 +40,6 @@ package() {
         "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
     install -Dm644 "${srcdir}/wifimaplinux.desktop" \
         "${pkgdir}/usr/share/applications/wifimaplinux.desktop"
+    install -Dm644 "${srcdir}/wifimaplinux.svg" \
+        "${pkgdir}/usr/share/icons/hicolor/scalable/apps/wifimaplinux.svg"
 }
