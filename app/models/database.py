@@ -51,3 +51,17 @@ def dispose_engine() -> None:
 
 def db_path() -> Path:
     return DATA_DIR / "wifimaplinux.db"
+
+
+def clear_db() -> None:
+    """Wipe all data by deleting and recreating the database file."""
+    p = db_path()
+    dispose_engine()
+    if p.exists():
+        p.unlink()
+    # Remove WAL / SHM leftovers
+    for suffix in ("-wal", "-shm"):
+        leftover = p.parent / (p.name + suffix)
+        if leftover.exists():
+            leftover.unlink()
+    init_db(DATA_DIR)

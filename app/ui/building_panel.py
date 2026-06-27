@@ -26,6 +26,7 @@ class BuildingPanel(QWidget):
     place_ap_requested = Signal(int)
     building_deleted = Signal()
     floor_deleted = Signal()
+    data_changed = Signal()       # creation / calibration events
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -176,6 +177,7 @@ class BuildingPanel(QWidget):
                 session.add(Building(name=name, address=address))
                 session.commit()
             self.refresh()
+            self.data_changed.emit()
 
     def _on_new_floor(self):
         if self._current_building_id is None:
@@ -193,6 +195,7 @@ class BuildingPanel(QWidget):
                 ))
                 session.commit()
             self.refresh()
+            self.data_changed.emit()
 
     def _on_import(self):
         if self._current_floor_id is not None:

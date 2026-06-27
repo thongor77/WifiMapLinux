@@ -11,7 +11,7 @@ from .section_view import SectionView
 from sqlmodel import select
 
 from ..models.building import Building
-from ..models.database import DATA_DIR, db_path, dispose_engine, get_session, init_db
+from ..models.database import DATA_DIR, clear_db, db_path, dispose_engine, get_session, init_db
 from ..models.floor import Floor, FloorPlan
 from ..models.measurement import MeasurementPoint, MeasurementScan
 from .ap_panel import APPanel
@@ -32,7 +32,6 @@ class _ScanThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("WifiMapLinux")
         self.resize(1280, 800)
         self._current_floor_id: int | None = None
         self._pending_pos: QPointF | None = None
@@ -42,8 +41,12 @@ class MainWindow(QMainWindow):
         self._section_floor_id: int | None = None
         self._current_measured_grid = None   # np.ndarray | None
         self._current_sim_grid = None        # np.ndarray | None
+        self._project_path: str | None = None
+        self._is_dirty: bool = False
+        clear_db()                           # always start with a blank project
         self._setup_ui()
         self._setup_menu()
+        self._update_title()
 
     def _setup_ui(self):
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -93,6 +96,9 @@ class MainWindow(QMainWindow):
         self.building_panel.place_ap_requested.connect(self._on_place_ap_requested)
         self.building_panel.building_deleted.connect(self._on_entity_deleted)
         self.building_panel.floor_deleted.connect(self._on_entity_deleted)
+        self.building_panel.data_changed.connect(self._mark_dirty)
+        self.ap_panel.ap_deleted.connect(lambda _: self._mark_dirty())
+        self.ap_panel.ap_edited.connect(lambda _: self._mark_dirty())
         self.ap_panel.ap_deleted.connect(self._on_ap_panel_changed)
         self.ap_panel.ap_edited.connect(self._on_ap_panel_changed)
         self.ap_panel.ap_highlight_requested.connect(self.floor_plan_widget.highlight_ap)
@@ -141,25 +147,73 @@ class MainWindow(QMainWindow):
         pdf_action.triggered.connect(self._on_export_pdf)
         export_menu.addAction(pdf_action)
 
+    # ── Dirty-state tracking ─────────────────────────────────────────────
+
+    def _mark_dirty(self):
+        self._is_dirty = True
+        self._update_title()
+
+    def _update_title(self):
+        import os
+        name = os.path.basename(self._project_path) if self._project_path else "Nouveau projet"
+        marker = " *" if self._is_dirty else ""
+        self.setWindowTitle(f"WifiMapLinux — {name}{marker}")
+
+    def closeEvent(self, event):
+        if self._is_dirty:
+            reply = QMessageBox.question(
+                self, "Projet non sauvegardé",
+                "Le projet contient des modifications non sauvegardées.\n"
+                "Voulez-vous le sauvegarder avant de quitter ?",
+                QMessageBox.StandardButton.Save
+                | QMessageBox.StandardButton.Discard
+                | QMessageBox.StandardButton.Cancel,
+            )
+            if reply == QMessageBox.StandardButton.Cancel:
+                event.ignore()
+                return
+            if reply == QMessageBox.StandardButton.Save:
+                self._save_project()
+                if self._is_dirty:   # user cancelled the save dialog
+                    event.ignore()
+                    return
+        event.accept()
+
     # ── Project save / load ───────────────────────────────────────────────
 
     def _save_project(self):
+        import os
         from ..services.project import save_project, EXTENSION
+        default = self._project_path or (
+            os.path.join(os.path.expanduser("~"), "projet" + EXTENSION)
+        )
         path, _ = QFileDialog.getSaveFileName(
             self, "Sauvegarder le projet",
-            "projet" + EXTENSION,
+            default,
             f"Projet WifiMap (*{EXTENSION})",
         )
         if not path:
             return
         try:
             save_project(path, db_path())
+            self._project_path = path
+            self._is_dirty = False
+            self._update_title()
             self.statusBar().showMessage(f"Projet sauvegardé : {path}")
         except Exception as e:
             QMessageBox.critical(self, "Erreur de sauvegarde", str(e))
 
     def _load_project(self):
         from ..services.project import load_project, EXTENSION
+        if self._is_dirty:
+            reply = QMessageBox.question(
+                self, "Projet non sauvegardé",
+                "Le projet actuel a des modifications non sauvegardées.\n"
+                "Continuer et perdre ces modifications ?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
         path, _ = QFileDialog.getOpenFileName(
             self, "Charger un projet",
             "",
@@ -167,19 +221,14 @@ class MainWindow(QMainWindow):
         )
         if not path:
             return
-        reply = QMessageBox.question(
-            self, "Charger un projet",
-            "Le projet actuel sera remplacé par le projet chargé.\n"
-            "Continuer ?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if reply != QMessageBox.StandardButton.Yes:
-            return
         try:
             dispose_engine()
             load_project(path, DATA_DIR, db_path())
             init_db(DATA_DIR)
+            self._project_path = path
+            self._is_dirty = False
             self._reset_ui()
+            self._update_title()
             self.statusBar().showMessage(f"Projet chargé : {path}")
         except Exception as e:
             QMessageBox.critical(self, "Erreur de chargement", str(e))
@@ -213,6 +262,7 @@ class MainWindow(QMainWindow):
         self.section_view.update_section([], 0)
         self.ap_panel.clear()
         self.statusBar().showMessage("")
+        self._mark_dirty()
 
     # ── Building / floor selection ────────────────────────────────────────
 
@@ -301,6 +351,7 @@ class MainWindow(QMainWindow):
                     floor.align_scale_y = sy
                     session.add(floor)
                     session.commit()
+            self._mark_dirty()
             self.statusBar().showMessage(
                 f"Recalage sauvegardé — Δx={ox_m:.2f} m, Δy={oy_m:.2f} m "
                 f"· échelle {sx:.0%} × {sy:.0%}"
@@ -405,6 +456,7 @@ class MainWindow(QMainWindow):
                     width_px=w, height_px=h,
                 ))
             session.commit()
+            self._mark_dirty()
 
         self.building_panel.refresh(reselect_floor_id=floor_id)
         self._on_floor_selected(floor_id)
@@ -439,6 +491,7 @@ class MainWindow(QMainWindow):
                 fp.cal_dist_m = dist_m
                 session.add(fp)
                 session.commit()
+        self._mark_dirty()
         self.statusBar().showMessage(
             f"Échelle calibrée : {scale:.1f} px/m  ({dist_m:.2f} m)"
         )
@@ -536,7 +589,7 @@ class MainWindow(QMainWindow):
                     channel=net.channel, frequency_mhz=net.frequency_mhz,
                 ))
             session.commit()
-
+        self._mark_dirty()
         self.floor_plan_widget.add_measurement_marker(pos.x(), pos.y(), best_signal)
 
         with get_session() as session:
@@ -735,6 +788,7 @@ class MainWindow(QMainWindow):
             session.commit()
             session.refresh(ap)
             ap_id = ap.id
+        self._mark_dirty()
         self.floor_plan_widget.add_ap_marker(ap_id, pos.x(), pos.y(), label)
         self.ap_panel.refresh()
         if self.heatmap_controls.sim_is_active():
@@ -768,6 +822,7 @@ class MainWindow(QMainWindow):
                 ap.y_px = pos.y()
                 session.add(ap)
                 session.commit()
+        self._mark_dirty()
         self._on_ap_panel_changed(self._current_floor_id)
         self.statusBar().showMessage("AP repositionné")
 
