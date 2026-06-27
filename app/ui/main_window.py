@@ -86,6 +86,8 @@ class MainWindow(QMainWindow):
         self.building_panel.measure_requested.connect(self._on_measure_requested)
         self.building_panel.alignment_requested.connect(self._on_alignment_requested)
         self.building_panel.place_ap_requested.connect(self._on_place_ap_requested)
+        self.building_panel.building_deleted.connect(self._on_entity_deleted)
+        self.building_panel.floor_deleted.connect(self._on_entity_deleted)
         self.floor_tab_bar.floor_selected.connect(self._on_floor_selected)
         self.floor_plan_widget.calibration_ready.connect(self._on_calibration_points)
         self.floor_plan_widget.position_selected.connect(self._on_position_selected)
@@ -114,6 +116,20 @@ class MainWindow(QMainWindow):
         pdf_action.setShortcut("Ctrl+Shift+E")
         pdf_action.triggered.connect(self._on_export_pdf)
         export_menu.addAction(pdf_action)
+
+    # ── Delete ────────────────────────────────────────────────────────────
+
+    def _on_entity_deleted(self):
+        self._current_floor_id = None
+        self._current_measured_grid = None
+        self._current_sim_grid = None
+        self._section_p1 = None
+        self._section_p2 = None
+        self._section_floor_id = None
+        self.floor_tab_bar.populate([])
+        self.floor_plan_widget.clear()
+        self.section_view.update_section([], 0)
+        self.statusBar().showMessage("")
 
     # ── Building / floor selection ────────────────────────────────────────
 

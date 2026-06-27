@@ -1,12 +1,15 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
+    QFrame, QLabel, QMessageBox, QPushButton, QTreeWidget, QTreeWidgetItem,
+    QVBoxLayout, QWidget,
 )
 from sqlmodel import select
 
+from ..models.access_point import AccessPoint
 from ..models.building import Building
 from ..models.database import get_session
 from ..models.floor import Floor, FloorPlan
+from ..models.measurement import MeasurementPoint, MeasurementScan
 from .dialogs.building_dialog import BuildingDialog
 from .dialogs.floor_dialog import FloorDialog
 
@@ -21,6 +24,8 @@ class BuildingPanel(QWidget):
     measure_requested = Signal(int)
     alignment_requested = Signal(int)
     place_ap_requested = Signal(int)
+    building_deleted = Signal()
+    floor_deleted = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -63,6 +68,20 @@ class BuildingPanel(QWidget):
                     self.btn_align):
             layout.addWidget(btn)
 
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+        layout.addWidget(sep)
+
+        self.btn_delete_floor = QPushButton("✕  Supprimer l'étage")
+        self.btn_delete_building = QPushButton("✕  Supprimer la maison")
+        self.btn_delete_floor.setEnabled(False)
+        self.btn_delete_building.setEnabled(False)
+        self.btn_delete_floor.setStyleSheet("color: #c0392b;")
+        self.btn_delete_building.setStyleSheet("color: #c0392b;")
+        layout.addWidget(self.btn_delete_floor)
+        layout.addWidget(self.btn_delete_building)
+
         self.btn_new_building.clicked.connect(self._on_new_building)
         self.btn_new_floor.clicked.connect(self._on_new_floor)
         self.btn_import.clicked.connect(self._on_import)
@@ -70,6 +89,8 @@ class BuildingPanel(QWidget):
         self.btn_measure.clicked.connect(self._on_measure)
         self.btn_place_ap.clicked.connect(self._on_place_ap)
         self.btn_align.clicked.connect(self._on_align)
+        self.btn_delete_floor.clicked.connect(self._on_delete_floor)
+        self.btn_delete_building.clicked.connect(self._on_delete_building)
 
     def refresh(self, reselect_floor_id: int | None = None):
         self.tree.clear()
@@ -109,6 +130,8 @@ class BuildingPanel(QWidget):
             self.btn_import.setEnabled(False)
             self.btn_calibrate.setEnabled(False)
             self.btn_align.setEnabled(False)
+            self.btn_delete_building.setEnabled(True)
+            self.btn_delete_floor.setEnabled(False)
             self.building_selected.emit(entity_id)
         elif kind == "floor":
             self._current_floor_id = entity_id
@@ -116,6 +139,8 @@ class BuildingPanel(QWidget):
             self.btn_new_floor.setEnabled(False)
             has_plan = self._floor_has_plan(entity_id)
             self._update_floor_buttons(entity_id, has_plan)
+            self.btn_delete_floor.setEnabled(True)
+            self.btn_delete_building.setEnabled(False)
             self.floor_selected.emit(entity_id)
 
     def _update_floor_buttons(self, floor_id: int, has_plan: bool):
@@ -188,3 +213,88 @@ class BuildingPanel(QWidget):
     def _on_place_ap(self):
         if self._current_floor_id is not None:
             self.place_ap_requested.emit(self._current_floor_id)
+
+    def _on_delete_floor(self):
+        floor_id = self._current_floor_id
+        if floor_id is None:
+            return
+        with get_session() as session:
+            floor = session.get(Floor, floor_id)
+            if not floor:
+                return
+            label = floor.label
+        reply = QMessageBox.question(
+            self, "Supprimer l'étage",
+            f"Supprimer « {label} » et toutes ses mesures ?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        with get_session() as session:
+            self._delete_floor_data(session, floor_id)
+            session.commit()
+        self._current_floor_id = None
+        self.btn_delete_floor.setEnabled(False)
+        self.btn_import.setEnabled(False)
+        self.btn_calibrate.setEnabled(False)
+        self.btn_measure.setEnabled(False)
+        self.btn_place_ap.setEnabled(False)
+        self.btn_align.setEnabled(False)
+        self.refresh()
+        self.floor_deleted.emit()
+
+    def _on_delete_building(self):
+        building_id = self._current_building_id
+        if building_id is None:
+            return
+        with get_session() as session:
+            building = session.get(Building, building_id)
+            if not building:
+                return
+            name = building.name
+        reply = QMessageBox.question(
+            self, "Supprimer la maison",
+            f"Supprimer « {name} » et tous ses étages et mesures ?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        with get_session() as session:
+            floors = session.exec(
+                select(Floor).where(Floor.building_id == building_id)
+            ).all()
+            for floor in floors:
+                self._delete_floor_data(session, floor.id)
+            building = session.get(Building, building_id)
+            session.delete(building)
+            session.commit()
+        self._current_building_id = None
+        self.btn_new_floor.setEnabled(False)
+        self.btn_delete_building.setEnabled(False)
+        self.refresh()
+        self.building_deleted.emit()
+
+    @staticmethod
+    def _delete_floor_data(session, floor_id: int):
+        points = session.exec(
+            select(MeasurementPoint).where(MeasurementPoint.floor_id == floor_id)
+        ).all()
+        for point in points:
+            for scan in session.exec(
+                select(MeasurementScan)
+                .where(MeasurementScan.measurement_point_id == point.id)
+            ).all():
+                session.delete(scan)
+            session.delete(point)
+        for ap in session.exec(
+            select(AccessPoint).where(AccessPoint.floor_id == floor_id)
+        ).all():
+            session.delete(ap)
+        fp = session.exec(
+            select(FloorPlan).where(FloorPlan.floor_id == floor_id)
+        ).first()
+        if fp:
+            session.delete(fp)
+        floor = session.get(Floor, floor_id)
+        if floor:
+            session.delete(floor)
