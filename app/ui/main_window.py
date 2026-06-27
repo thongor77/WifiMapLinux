@@ -11,7 +11,7 @@ from .section_view import SectionView
 from sqlmodel import select
 
 from ..models.building import Building
-from ..models.database import DATA_DIR, get_session
+from ..models.database import DATA_DIR, db_path, dispose_engine, get_session, init_db
 from ..models.floor import Floor, FloorPlan
 from ..models.measurement import MeasurementPoint, MeasurementScan
 from .ap_panel import APPanel
@@ -112,6 +112,19 @@ class MainWindow(QMainWindow):
 
     def _setup_menu(self):
         file_menu = self.menuBar().addMenu("Fichier")
+
+        save_action = QAction("Sauvegarder le projet…", self)
+        save_action.setShortcut("Ctrl+S")
+        save_action.triggered.connect(self._save_project)
+        file_menu.addAction(save_action)
+
+        load_action = QAction("Charger un projet…", self)
+        load_action.setShortcut("Ctrl+O")
+        load_action.triggered.connect(self._load_project)
+        file_menu.addAction(load_action)
+
+        file_menu.addSeparator()
+
         quit_action = QAction("Quitter", self)
         quit_action.setShortcut("Ctrl+Q")
         quit_action.triggered.connect(self.close)
@@ -127,6 +140,64 @@ class MainWindow(QMainWindow):
         pdf_action.setShortcut("Ctrl+Shift+E")
         pdf_action.triggered.connect(self._on_export_pdf)
         export_menu.addAction(pdf_action)
+
+    # ── Project save / load ───────────────────────────────────────────────
+
+    def _save_project(self):
+        from ..services.project import save_project, EXTENSION
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Sauvegarder le projet",
+            "projet" + EXTENSION,
+            f"Projet WifiMap (*{EXTENSION})",
+        )
+        if not path:
+            return
+        try:
+            save_project(path, db_path())
+            self.statusBar().showMessage(f"Projet sauvegardé : {path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur de sauvegarde", str(e))
+
+    def _load_project(self):
+        from ..services.project import load_project, EXTENSION
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Charger un projet",
+            "",
+            f"Projet WifiMap (*{EXTENSION})",
+        )
+        if not path:
+            return
+        reply = QMessageBox.question(
+            self, "Charger un projet",
+            "Le projet actuel sera remplacé par le projet chargé.\n"
+            "Continuer ?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            dispose_engine()
+            load_project(path, DATA_DIR, db_path())
+            init_db(DATA_DIR)
+            self._reset_ui()
+            self.statusBar().showMessage(f"Projet chargé : {path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur de chargement", str(e))
+            init_db(DATA_DIR)
+
+    def _reset_ui(self):
+        self._current_floor_id = None
+        self._current_measured_grid = None
+        self._current_sim_grid = None
+        self._section_p1 = None
+        self._section_p2 = None
+        self._section_floor_id = None
+        self.floor_tab_bar.populate([])
+        self.floor_plan_widget.clear()
+        self.section_view.update_section([], 0)
+        self.ap_panel.clear()
+        self.statusBar().showMessage("")
+        self.building_panel.refresh()
 
     # ── Delete ────────────────────────────────────────────────────────────
 

@@ -19,3 +19,13 @@ def init_db(data_dir: Path) -> None:
 
 def get_session() -> Session:
     return Session(_engine)
+
+
+def dispose_engine() -> None:
+    """Close all pooled connections (call before overwriting the DB file)."""
+    if _engine is not None:
+        _engine.dispose()
+
+
+def db_path() -> Path:
+    return DATA_DIR / "wifimaplinux.db"
