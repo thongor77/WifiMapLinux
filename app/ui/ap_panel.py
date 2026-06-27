@@ -7,6 +7,7 @@ from sqlmodel import select
 
 from ..models.access_point import AccessPoint
 from ..models.database import get_session
+from ..models.floor import Floor
 from .dialogs.ap_dialog import APDialog
 
 _ROLE = Qt.ItemDataRole.UserRole
@@ -125,11 +126,26 @@ class APPanel(QWidget):
             if not ap:
                 return
             label, tx, freq = ap.label, ap.tx_power_dbm, ap.frequency_mhz
+            floor = session.get(Floor, ap.floor_id)
+            building_id = floor.building_id if floor else None
 
-        dialog = APDialog(label=label, tx=tx, freq_mhz=freq, parent=self)
-        if not dialog.exec():
-            return
-        new_label, new_tx, new_freq = dialog.get_data()
+        while True:
+            dialog = APDialog(label=label, tx=tx, freq_mhz=freq, parent=self)
+            if not dialog.exec():
+                return
+            new_label, new_tx, new_freq = dialog.get_data()
+            if building_id is not None and self._ap_name_taken(
+                new_label, building_id, exclude_ap_id=ap_id
+            ):
+                QMessageBox.warning(
+                    self, "Nom déjà utilisé",
+                    f"Un AP nommé « {new_label} » existe déjà dans cette maison.\n"
+                    "Choisissez un nom différent.",
+                )
+                label = new_label   # keep the typed name pre-filled
+                continue
+            break
+
         with get_session() as session:
             ap = session.get(AccessPoint, ap_id)
             ap.label = new_label
@@ -139,6 +155,23 @@ class APPanel(QWidget):
             session.commit()
         self._refresh()
         self.ap_edited.emit(self._floor_id)
+
+    def _ap_name_taken(
+        self, name: str, building_id: int, exclude_ap_id: int | None = None
+    ) -> bool:
+        with get_session() as session:
+            floor_ids = [
+                f.id for f in session.exec(
+                    select(Floor).where(Floor.building_id == building_id)
+                ).all()
+            ]
+            q = select(AccessPoint).where(
+                AccessPoint.floor_id.in_(floor_ids),
+                AccessPoint.label == name,
+            )
+            if exclude_ap_id is not None:
+                q = q.where(AccessPoint.id != exclude_ap_id)
+            return session.exec(q).first() is not None
 
     def _on_move(self):
         ap_id = self._selected_ap_id()

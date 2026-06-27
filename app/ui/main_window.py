@@ -653,11 +653,29 @@ class MainWindow(QMainWindow):
             return
         from .dialogs.ap_dialog import APDialog
         from ..models.access_point import AccessPoint
-        dialog = APDialog(parent=self)
-        if not dialog.exec():
-            self.statusBar().showMessage("Placement AP annulé")
-            return
-        label, tx, freq = dialog.get_data()
+
+        with get_session() as session:
+            floor = session.get(Floor, self._current_floor_id)
+            building_id = floor.building_id if floor else None
+
+        label = "AP"
+        tx = 20.0
+        freq = 2437.0
+        while True:
+            dialog = APDialog(label=label, tx=tx, freq_mhz=freq, parent=self)
+            if not dialog.exec():
+                self.statusBar().showMessage("Placement AP annulé")
+                return
+            label, tx, freq = dialog.get_data()
+            if building_id is not None and self._ap_name_taken(label, building_id):
+                QMessageBox.warning(
+                    self, "Nom déjà utilisé",
+                    f"Un AP nommé « {label} » existe déjà dans cette maison.\n"
+                    "Choisissez un nom différent.",
+                )
+                continue
+            break
+
         with get_session() as session:
             ap = AccessPoint(
                 floor_id=self._current_floor_id,
@@ -672,6 +690,21 @@ class MainWindow(QMainWindow):
         self.ap_panel.refresh()
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
+
+    def _ap_name_taken(self, name: str, building_id: int) -> bool:
+        from ..models.access_point import AccessPoint
+        with get_session() as session:
+            floor_ids = [
+                f.id for f in session.exec(
+                    select(Floor).where(Floor.building_id == building_id)
+                ).all()
+            ]
+            return session.exec(
+                select(AccessPoint).where(
+                    AccessPoint.floor_id.in_(floor_ids),
+                    AccessPoint.label == name,
+                )
+            ).first() is not None
 
     def _on_ap_move_requested(self, ap_id: int):
         self.floor_plan_widget.start_move_ap_mode(ap_id)
