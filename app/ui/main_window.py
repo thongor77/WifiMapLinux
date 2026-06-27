@@ -16,6 +16,7 @@ from ..models.floor import Floor, FloorPlan
 from ..models.measurement import MeasurementPoint, MeasurementScan
 from .ap_panel import APPanel
 from .building_panel import BuildingPanel
+from .measurement_panel import MeasurementPanel
 from .floor_plan_widget import FloorPlanWidget
 from .floor_tab_bar import FloorTabBar
 from .heatmap_controls import HeatmapControls
@@ -79,9 +80,17 @@ class MainWindow(QMainWindow):
         splitter.addWidget(right)
         splitter.setStretchFactor(1, 1)
 
+        right_side = QSplitter(Qt.Orientation.Vertical)
+
         self.ap_panel = APPanel()
-        self.ap_panel.setFixedWidth(240)
-        splitter.addWidget(self.ap_panel)
+        right_side.addWidget(self.ap_panel)
+
+        self.measurement_panel = MeasurementPanel()
+        right_side.addWidget(self.measurement_panel)
+
+        right_side.setSizes([300, 260])
+        right_side.setFixedWidth(240)
+        splitter.addWidget(right_side)
 
         self.setCentralWidget(splitter)
         self.setStatusBar(QStatusBar())
@@ -107,6 +116,8 @@ class MainWindow(QMainWindow):
         self.floor_plan_widget.ap_moved.connect(self._on_ap_moved)
         self.floor_tab_bar.floor_selected.connect(self._on_floor_selected)
         self.floor_plan_widget.calibration_ready.connect(self._on_calibration_points)
+        self.measurement_panel.measurement_deleted.connect(self._on_measurement_deleted)
+        self.measurement_panel.measurement_selected.connect(self._on_measurement_selected)
         self.floor_plan_widget.position_selected.connect(self._on_position_selected)
         self.floor_plan_widget.ap_placed.connect(self._on_ap_placed)
         self.heatmap_controls.toggled.connect(self._on_heatmap_toggled)
@@ -245,6 +256,7 @@ class MainWindow(QMainWindow):
         self.floor_plan_widget.clear()
         self.section_view.update_section([], 0)
         self.ap_panel.clear()
+        self.measurement_panel.clear()
         self.statusBar().showMessage("")
         self.building_panel.refresh()
 
@@ -261,6 +273,7 @@ class MainWindow(QMainWindow):
         self.floor_plan_widget.clear()
         self.section_view.update_section([], 0)
         self.ap_panel.clear()
+        self.measurement_panel.clear()
         self.statusBar().showMessage("")
         self._mark_dirty()
 
@@ -364,7 +377,9 @@ class MainWindow(QMainWindow):
         self._current_sim_grid = None
         with get_session() as session:
             floor = session.get(Floor, floor_id)
-            self.ap_panel.load_floor(floor_id, floor.label if floor else "")
+            floor_label = floor.label if floor else ""
+            self.ap_panel.load_floor(floor_id, floor_label)
+            self.measurement_panel.load_floor(floor_id, floor_label)
             fp = session.exec(
                 select(FloorPlan).where(FloorPlan.floor_id == floor_id)
             ).first()
@@ -591,6 +606,7 @@ class MainWindow(QMainWindow):
             session.commit()
         self._mark_dirty()
         self.floor_plan_widget.add_measurement_marker(pos.x(), pos.y(), best_signal)
+        self.measurement_panel.refresh()
 
         with get_session() as session:
             self._populate_ssids(floor_id, session)
@@ -825,6 +841,33 @@ class MainWindow(QMainWindow):
         self._mark_dirty()
         self._on_ap_panel_changed(self._current_floor_id)
         self.statusBar().showMessage("AP repositionné")
+
+    def _on_measurement_deleted(self, floor_id: int):
+        self._mark_dirty()
+        if floor_id == self._current_floor_id:
+            self._reload_measurement_markers()
+            if self.heatmap_controls.heatmap_is_active():
+                self._refresh_measured_heatmap()
+
+    def _on_measurement_selected(self, x: float, y: float):
+        self.floor_plan_widget.center_on(x, y)
+
+    def _reload_measurement_markers(self):
+        self.floor_plan_widget.clear_measurement_markers()
+        if self._current_floor_id is None:
+            return
+        with get_session() as session:
+            points = session.exec(
+                select(MeasurementPoint)
+                .where(MeasurementPoint.floor_id == self._current_floor_id)
+            ).all()
+            for pt in points:
+                scans = session.exec(
+                    select(MeasurementScan)
+                    .where(MeasurementScan.measurement_point_id == pt.id)
+                ).all()
+                best = max((s.signal_dbm for s in scans), default=-100)
+                self.floor_plan_widget.add_measurement_marker(pt.x_px, pt.y_px, best)
 
     def _on_ap_panel_changed(self, floor_id: int):
         if floor_id != self._current_floor_id:

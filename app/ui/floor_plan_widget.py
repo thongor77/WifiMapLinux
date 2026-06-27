@@ -39,6 +39,7 @@ class FloorPlanWidget(QGraphicsView):
         self._section_points: list[QPointF] = []
         self._section_items = []
         self._ap_items: dict[int, list] = {}   # ap_id → graphics items
+        self._measure_items: list = []
         self._move_ap_mode = False
         self._moving_ap_id: int | None = None
         self._highlighted_ap_id: int | None = None
@@ -59,6 +60,7 @@ class FloorPlanWidget(QGraphicsView):
         self._heatmap_item = None
         self._sim_heatmap_item = None
         self._ap_items = {}
+        self._measure_items = []
         self._scene.addText(text).setDefaultTextColor(QColor("#888888"))
 
     def load_floorplan(self, path: str):
@@ -73,6 +75,7 @@ class FloorPlanWidget(QGraphicsView):
         self._cal_items = []
         self._section_items = []
         self._ap_items = {}
+        self._measure_items = []
         self.stop_highlight_ap()
 
         pixmap = QPixmap(path)
@@ -151,18 +154,24 @@ class FloorPlanWidget(QGraphicsView):
             self._add_marker(x, y, sig)
 
     def add_measurement_marker(self, x_px: float, y_px: float, signal_dbm: int):
-        self._add_marker(x_px, y_px, signal_dbm)
-
-    def _add_marker(self, x: float, y: float, sig: int):
         r = 8
-        color = _signal_color(sig)
+        color = _signal_color(signal_dbm)
         item = self._scene.addEllipse(
-            x - r, y - r, r * 2, r * 2,
+            x_px - r, y_px - r, r * 2, r * 2,
             QPen(color.darker(140), 1.5),
             QBrush(color),
         )
         item.setZValue(10)
-        item.setToolTip(f"{sig} dBm")
+        item.setToolTip(f"{signal_dbm} dBm")
+        self._measure_items.append(item)
+
+    def clear_measurement_markers(self):
+        for item in self._measure_items:
+            self._scene.removeItem(item)
+        self._measure_items = []
+
+    def center_on(self, x: float, y: float):
+        self.centerOn(x, y)
 
     # ── AP markers ────────────────────────────────────────────────────────
 
