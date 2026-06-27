@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
-    QDialog, QGraphicsItem, QGraphicsScene, QGraphicsView,
+    QDialog, QDoubleSpinBox, QGraphicsItem, QGraphicsScene, QGraphicsView,
     QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
 )
 
@@ -14,6 +14,7 @@ class _AlignmentView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.NoDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setRenderHint(self.renderHints())
+        self._scale_changed_cb = None
 
         # Reference floor: full opacity, not movable
         scene.addPixmap(ref_pixmap).setZValue(0)
@@ -23,6 +24,7 @@ class _AlignmentView(QGraphicsView):
         self._overlay.setZValue(1)
         self._overlay.setOpacity(0.5)
         self._overlay.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+        self._overlay.setTransformOriginPoint(0, 0)
 
         scene.setSceneRect(self._overlay.boundingRect().united(
             scene.items()[-1].boundingRect()
@@ -30,8 +32,23 @@ class _AlignmentView(QGraphicsView):
         self.fitInView(scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
 
     def wheelEvent(self, event):
-        factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
-        self.scale(factor, factor)
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            # Ctrl+wheel → scale the overlay
+            delta = event.angleDelta().y()
+            step = 0.05 if delta > 0 else -0.05
+            new_scale = max(0.1, min(5.0, self._overlay.scale() + step))
+            self._overlay.setScale(new_scale)
+            if self._scale_changed_cb:
+                self._scale_changed_cb(new_scale * 100.0)
+        else:
+            factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
+            self.scale(factor, factor)
+
+    def set_scale_changed_callback(self, cb):
+        self._scale_changed_cb = cb
+
+    def set_overlay_scale(self, factor: float):
+        self._overlay.setScale(factor)
 
     def offset_px(self) -> tuple[float, float]:
         return self._overlay.x(), self._overlay.y()
@@ -76,13 +93,36 @@ class AlignmentDialog(QDialog):
 
         info = QLabel(
             "Glissez l'étage supérieur (semi-transparent) pour l'aligner "
-            "sur le plan de référence. Molette = zoom."
+            "sur le plan de référence.  "
+            "Molette = zoom vue  ·  Ctrl+Molette = échelle overlay."
         )
         info.setStyleSheet("color: #aaaaaa; padding: 4px;")
         layout.addWidget(info)
 
         self._view = _AlignmentView(ref_px, cur_px)
         layout.addWidget(self._view, stretch=1)
+
+        # Scale control row
+        scale_row = QHBoxLayout()
+        scale_lbl = QLabel("Échelle overlay :")
+        scale_row.addWidget(scale_lbl)
+        self._scale_spin = QDoubleSpinBox()
+        self._scale_spin.setRange(10.0, 500.0)
+        self._scale_spin.setValue(100.0)
+        self._scale_spin.setSingleStep(5.0)
+        self._scale_spin.setSuffix(" %")
+        self._scale_spin.setFixedWidth(100)
+        self._scale_spin.valueChanged.connect(
+            lambda v: self._view.set_overlay_scale(v / 100.0)
+        )
+        scale_row.addWidget(self._scale_spin)
+        reset_btn = QPushButton("Réinitialiser")
+        reset_btn.clicked.connect(lambda: self._scale_spin.setValue(100.0))
+        scale_row.addWidget(reset_btn)
+        scale_row.addStretch()
+        layout.addLayout(scale_row)
+
+        self._view.set_scale_changed_callback(self._sync_scale_spin)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
@@ -94,6 +134,11 @@ class AlignmentDialog(QDialog):
         ok.clicked.connect(self.accept)
         btn_row.addWidget(ok)
         layout.addLayout(btn_row)
+
+    def _sync_scale_spin(self, pct: float):
+        self._scale_spin.blockSignals(True)
+        self._scale_spin.setValue(pct)
+        self._scale_spin.blockSignals(False)
 
     def offset_m(self) -> tuple[float, float]:
         """Return (offset_x_m, offset_y_m) in the reference floor's coordinate system."""
