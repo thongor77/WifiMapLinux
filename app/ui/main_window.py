@@ -624,10 +624,6 @@ class MainWindow(QMainWindow):
             self._load_ap_markers(floor_id, session)
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
-        band = "2.4 GHz" if freq < 3000 else ("5 GHz" if freq < 5900 else "6 GHz")
-        self.statusBar().showMessage(
-            f"AP virtuel ajouté : {label} · {tx:.0f} dBm TX · {band}"
-        )
 
     # ── Simulation heatmap ────────────────────────────────────────────────
 
