@@ -23,8 +23,8 @@ source=(
     "${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
     'wifimaplinux.desktop'
 )
-b2sums=(SKIP
-        SKIP)
+b2sums=('64c9ee67c7b4d821ed17a40c0cdf069150012b763eec4e2cc7efb49f42dc584f2f44cbf7a4a244ae46d0349cd56e9f624b237c5031cb1250c9511bbb87a5c00e'
+        'bcde975d6dc0783be2992a6061e43e12a4ac130e7a98181e179eaede33ffba6730fe63d3cd42d7264647373e4ff4d906bc765e388688351d01a50097e592345d')
 
 build() {
     cd "WifiMapLinux-${pkgver}"
