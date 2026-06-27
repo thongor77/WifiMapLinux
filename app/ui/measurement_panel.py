@@ -7,6 +7,7 @@ from sqlmodel import select
 
 from ..models.database import get_session
 from ..models.measurement import MeasurementPoint, MeasurementScan
+from ..services.i18n import tr
 
 _ROLE = Qt.ItemDataRole.UserRole
 
@@ -27,7 +28,7 @@ class MeasurementPanel(QWidget):
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(4)
 
-        title = QLabel("Mesures")
+        title = QLabel(tr("panel_measurements_title"))
         title.setStyleSheet("font-weight: bold; font-size: 13px;")
         layout.addWidget(title)
 
@@ -37,12 +38,12 @@ class MeasurementPanel(QWidget):
 
         self._list = QListWidget()
         self._list.setAlternatingRowColors(True)
-        self._list.setToolTip("Double-cliquer pour centrer sur le point")
+        self._list.setToolTip(tr("tooltip_meas_jump"))
         self._list.itemSelectionChanged.connect(self._on_selection)
         self._list.itemDoubleClicked.connect(self._on_jump)
         layout.addWidget(self._list)
 
-        self._btn_delete = QPushButton("✕  Supprimer la mesure")
+        self._btn_delete = QPushButton(tr("btn_delete_measurement"))
         self._btn_delete.setEnabled(False)
         self._btn_delete.setStyleSheet("color: #c0392b;")
         self._btn_delete.clicked.connect(self._on_delete)
@@ -83,7 +84,7 @@ class MeasurementPanel(QWidget):
                 ).all()
                 best = max((s.signal_dbm for s in scans), default=None)
                 n_net = len(scans)
-                display_label = pt.label or f"Point {idx}"
+                display_label = pt.label or tr("measurement_point_label", n=idx)
                 signal_str = f"{best} dBm" if best is not None else "—"
                 text = f"📍  {display_label}  ·  {signal_str}  ·  {n_net} réseau{'x' if n_net > 1 else ''}"
                 item = QListWidgetItem(text)
@@ -111,8 +112,8 @@ class MeasurementPanel(QWidget):
             return
         pt_id, _, _ = data
         reply = QMessageBox.question(
-            self, "Supprimer la mesure",
-            "Supprimer ce point de mesure et ses données Wi-Fi ?",
+            self, tr("dlg_delete_meas_title"),
+            tr("dlg_delete_meas_msg"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:

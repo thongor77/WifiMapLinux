@@ -14,6 +14,8 @@ from ..models.building import Building
 from ..models.database import DATA_DIR, clear_db, db_path, dispose_engine, get_session, init_db
 from ..models.floor import Floor, FloorPlan
 from ..models.measurement import MeasurementPoint, MeasurementScan
+from ..services.i18n import tr
+from ..services.settings import get as _get_settings, save as _save_settings
 from .ap_panel import APPanel
 from .building_panel import BuildingPanel
 from .measurement_panel import MeasurementPanel
@@ -128,35 +130,57 @@ class MainWindow(QMainWindow):
         self.floor_plan_widget.section_line_changed.connect(self._on_section_line_changed)
 
     def _setup_menu(self):
-        file_menu = self.menuBar().addMenu("Fichier")
+        from PySide6.QtGui import QActionGroup
 
-        save_action = QAction("Sauvegarder le projet…", self)
+        file_menu = self.menuBar().addMenu(tr("menu_file"))
+
+        save_action = QAction(tr("menu_save"), self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self._save_project)
         file_menu.addAction(save_action)
 
-        load_action = QAction("Charger un projet…", self)
+        load_action = QAction(tr("menu_open"), self)
         load_action.setShortcut("Ctrl+O")
         load_action.triggered.connect(self._load_project)
         file_menu.addAction(load_action)
 
         file_menu.addSeparator()
 
-        quit_action = QAction("Quitter", self)
+        quit_action = QAction(tr("menu_quit"), self)
         quit_action.setShortcut("Ctrl+Q")
         quit_action.triggered.connect(self.close)
         file_menu.addAction(quit_action)
 
-        export_menu = self.menuBar().addMenu("Export")
-        png_action = QAction("Exporter étage actuel (PNG)…", self)
+        export_menu = self.menuBar().addMenu(tr("menu_export"))
+        png_action = QAction(tr("menu_export_png"), self)
         png_action.setShortcut("Ctrl+E")
         png_action.triggered.connect(self._on_export_png)
         export_menu.addAction(png_action)
 
-        pdf_action = QAction("Rapport de couverture (PDF)…", self)
+        pdf_action = QAction(tr("menu_export_pdf"), self)
         pdf_action.setShortcut("Ctrl+Shift+E")
         pdf_action.triggered.connect(self._on_export_pdf)
         export_menu.addAction(pdf_action)
+
+        settings_menu = self.menuBar().addMenu(tr("menu_settings"))
+        lang_menu = settings_menu.addMenu(tr("menu_language"))
+        lang_group = QActionGroup(self)
+        lang_group.setExclusive(True)
+        current_lang = _get_settings().language
+        for code, label_key in [("fr", "menu_language_fr"), ("en", "menu_language_en")]:
+            action = QAction(tr(label_key), self)
+            action.setCheckable(True)
+            action.setChecked(code == current_lang)
+            action.triggered.connect(lambda checked, c=code: self._on_language_changed(c))
+            lang_group.addAction(action)
+            lang_menu.addAction(action)
+
+    def _on_language_changed(self, lang_code: str):
+        _get_settings().language = lang_code
+        _save_settings()
+        QMessageBox.information(
+            self, tr("dlg_language_restart_title"), tr("dlg_language_restart_msg")
+        )
 
     # ── Dirty-state tracking ─────────────────────────────────────────────
 
@@ -166,16 +190,15 @@ class MainWindow(QMainWindow):
 
     def _update_title(self):
         import os
-        name = os.path.basename(self._project_path) if self._project_path else "Nouveau projet"
+        name = os.path.basename(self._project_path) if self._project_path else tr("title_new_project")
         marker = " *" if self._is_dirty else ""
         self.setWindowTitle(f"WifiMapLinux — {name}{marker}")
 
     def closeEvent(self, event):
         if self._is_dirty:
             reply = QMessageBox.question(
-                self, "Projet non sauvegardé",
-                "Le projet contient des modifications non sauvegardées.\n"
-                "Voulez-vous le sauvegarder avant de quitter ?",
+                self, tr("dlg_unsaved_title"),
+                tr("dlg_unsaved_close_msg"),
                 QMessageBox.StandardButton.Save
                 | QMessageBox.StandardButton.Discard
                 | QMessageBox.StandardButton.Cancel,
@@ -199,9 +222,9 @@ class MainWindow(QMainWindow):
             os.path.join(os.path.expanduser("~"), "projet" + EXTENSION)
         )
         path, _ = QFileDialog.getSaveFileName(
-            self, "Sauvegarder le projet",
+            self, tr("dlg_save_title"),
             default,
-            f"Projet WifiMap (*{EXTENSION})",
+            tr("dlg_project_filter", ext=EXTENSION),
         )
         if not path:
             return
@@ -210,25 +233,24 @@ class MainWindow(QMainWindow):
             self._project_path = path
             self._is_dirty = False
             self._update_title()
-            self.statusBar().showMessage(f"Projet sauvegardé : {path}")
+            self.statusBar().showMessage(tr("status_project_saved", path=path))
         except Exception as e:
-            QMessageBox.critical(self, "Erreur de sauvegarde", str(e))
+            QMessageBox.critical(self, tr("dlg_save_error_title"), str(e))
 
     def _load_project(self):
         from ..services.project import load_project, EXTENSION
         if self._is_dirty:
             reply = QMessageBox.question(
-                self, "Projet non sauvegardé",
-                "Le projet actuel a des modifications non sauvegardées.\n"
-                "Continuer et perdre ces modifications ?",
+                self, tr("dlg_unsaved_title"),
+                tr("dlg_unsaved_load_msg"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:
                 return
         path, _ = QFileDialog.getOpenFileName(
-            self, "Charger un projet",
+            self, tr("dlg_open_title"),
             "",
-            f"Projet WifiMap (*{EXTENSION})",
+            tr("dlg_project_filter", ext=EXTENSION),
         )
         if not path:
             return
@@ -240,9 +262,9 @@ class MainWindow(QMainWindow):
             self._is_dirty = False
             self._reset_ui()
             self._update_title()
-            self.statusBar().showMessage(f"Projet chargé : {path}")
+            self.statusBar().showMessage(tr("status_project_loaded", path=path))
         except Exception as e:
-            QMessageBox.critical(self, "Erreur de chargement", str(e))
+            QMessageBox.critical(self, tr("dlg_load_error_title"), str(e))
             init_db(DATA_DIR)
 
     def _reset_ui(self):
@@ -324,21 +346,21 @@ class MainWindow(QMainWindow):
                 .order_by(Floor.index.desc())
             ).first()
             if not ref_floor:
-                QMessageBox.warning(self, "Recalage", "Aucun étage inférieur trouvé.")
+                QMessageBox.warning(self, tr("dlg_alignment_title"), tr("msg_no_floor_below"))
                 return
             ref_fp = session.exec(
                 select(FloorPlan).where(FloorPlan.floor_id == ref_floor.id)
             ).first()
             if not ref_fp:
                 QMessageBox.warning(
-                    self, "Recalage",
-                    f"L'étage « {ref_floor.label} » n'a pas de plan importé.",
+                    self, tr("dlg_alignment_title"),
+                    tr("msg_floor_no_plan", label=ref_floor.label),
                 )
                 return
             if not ref_fp.scale_px_per_m:
                 QMessageBox.warning(
-                    self, "Recalage",
-                    f"L'étage « {ref_floor.label} » n'est pas encore calibré.",
+                    self, tr("dlg_alignment_title"),
+                    tr("msg_floor_not_calibrated", label=ref_floor.label),
                 )
                 return
             ref_path = ref_fp.image_path
@@ -366,8 +388,7 @@ class MainWindow(QMainWindow):
                     session.commit()
             self._mark_dirty()
             self.statusBar().showMessage(
-                f"Recalage sauvegardé — Δx={ox_m:.2f} m, Δy={oy_m:.2f} m "
-                f"· échelle {sx:.0%} × {sy:.0%}"
+                tr("status_alignment_saved", ox=ox_m, oy=oy_m, sx=sx, sy=sy)
             )
 
     def _on_floor_selected(self, floor_id: int):
@@ -392,15 +413,13 @@ class MainWindow(QMainWindow):
                     self._compute_heatmap(fp)
                 if fp.scale_px_per_m:
                     self.statusBar().showMessage(
-                        f"Échelle : {fp.scale_px_per_m:.1f} px/m — {fp.cal_dist_m} m"
+                        tr("status_scale", scale=fp.scale_px_per_m, dist=fp.cal_dist_m)
                     )
                 else:
-                    self.statusBar().showMessage("Plan importé — calibration requise")
+                    self.statusBar().showMessage(tr("status_plan_no_cal"))
             else:
                 self.floor_plan_widget.clear()
-                self.statusBar().showMessage(
-                    "Aucun plan pour cet étage — cliquez 'Importer plan PNG'"
-                )
+                self.statusBar().showMessage(tr("status_no_plan"))
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
 
@@ -443,7 +462,7 @@ class MainWindow(QMainWindow):
 
     def _on_import_plan(self, floor_id: int):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Importer un plan", "", "Images (*.png *.jpg *.jpeg *.bmp)"
+            self, tr("dlg_import_title"), "", tr("dlg_image_filter")
         )
         if not path:
             return
@@ -475,21 +494,19 @@ class MainWindow(QMainWindow):
 
         self.building_panel.refresh(reselect_floor_id=floor_id)
         self._on_floor_selected(floor_id)
-        self.statusBar().showMessage(
-            f"Plan importé ({w}×{h} px) — cliquez 'Calibrer l'échelle'"
-        )
+        self.statusBar().showMessage(tr("status_plan_imported", w=w, h=h))
 
     # ── Calibration ───────────────────────────────────────────────────────
 
     def _on_calibrate(self, _floor_id: int):
         self.floor_plan_widget.start_calibration()
-        self.statusBar().showMessage("Calibration : cliquez 2 points sur le plan")
+        self.statusBar().showMessage(tr("status_calibration_start"))
 
     def _on_calibration_points(self, p1: QPointF, p2: QPointF):
         pixel_dist = sqrt((p2.x() - p1.x()) ** 2 + (p2.y() - p1.y()) ** 2)
         dist_m, ok = QInputDialog.getDouble(
-            self, "Calibration — distance réelle",
-            f"Distance entre les 2 points ({pixel_dist:.1f} px) en mètres :",
+            self, tr("dlg_calibration_title"),
+            tr("dlg_calibration_msg", px=pixel_dist),
             1.0, 0.01, 999.0, 2,
         )
         if not ok or self._current_floor_id is None:
@@ -507,9 +524,7 @@ class MainWindow(QMainWindow):
                 session.add(fp)
                 session.commit()
         self._mark_dirty()
-        self.statusBar().showMessage(
-            f"Échelle calibrée : {scale:.1f} px/m  ({dist_m:.2f} m)"
-        )
+        self.statusBar().showMessage(tr("status_calibrated", scale=scale, dist=dist_m))
 
     # ── Measure flow ──────────────────────────────────────────────────────
 
@@ -542,8 +557,8 @@ class MainWindow(QMainWindow):
                 0,
             )
             label, ok = QInputDialog.getItem(
-                self, "Mesure Wi-Fi",
-                "Sur quel étage vous trouvez-vous actuellement ?",
+                self, tr("dlg_measure_title"),
+                tr("dlg_measure_floor"),
                 labels, current_idx, False,
             )
             if not ok:
@@ -555,11 +570,11 @@ class MainWindow(QMainWindow):
                 self.building_panel.refresh(reselect_floor_id=chosen_id)
 
         self.floor_plan_widget.start_measure_mode()
-        self.statusBar().showMessage("📡  Cliquez sur votre position actuelle sur le plan")
+        self.statusBar().showMessage(tr("status_measure_mode"))
 
     def _on_position_selected(self, pos: QPointF):
         self._pending_pos = pos
-        self.statusBar().showMessage("Scan Wi-Fi en cours…")
+        self.statusBar().showMessage(tr("status_scan_in_progress"))
         self.building_panel.setEnabled(False)
         self._scan_thread = _ScanThread(self)
         self._scan_thread.result.connect(self._on_scan_result)
@@ -572,17 +587,16 @@ class MainWindow(QMainWindow):
 
         if not networks:
             QMessageBox.warning(
-                self, "Aucun réseau détecté",
-                "Le scan n'a retourné aucun réseau.\n"
-                "Vérifiez que le Wi-Fi est activé et qu'iw/nmcli est disponible.",
+                self, tr("dlg_no_network_title"),
+                tr("dlg_no_network_msg"),
             )
-            self.statusBar().showMessage("Scan : aucun réseau détecté")
+            self.statusBar().showMessage(tr("status_scan_no_network"))
             return
 
         from .dialogs.scan_dialog import ScanDialog
         dialog = ScanDialog(networks, self)
         if not dialog.exec():
-            self.statusBar().showMessage("Mesure annulée")
+            self.statusBar().showMessage(tr("status_measure_cancelled"))
             return
 
         label = dialog.get_label()
@@ -615,18 +629,13 @@ class MainWindow(QMainWindow):
         self._refresh_section()
 
         n = len(networks)
-        self.statusBar().showMessage(
-            f"Mesure enregistrée — {n} réseau{'x' if n > 1 else ''} · "
-            f"meilleur signal : {best_signal} dBm"
-        )
+        self.statusBar().showMessage(tr("status_measure_saved", n=n, best=best_signal))
 
     # ── Section (coupe verticale) ─────────────────────────────────────────
 
     def _on_section_requested(self):
         self.floor_plan_widget.start_section_mode()
-        self.statusBar().showMessage(
-            "Coupe : cliquez 2 points sur le plan pour définir la ligne de coupe"
-        )
+        self.statusBar().showMessage(tr("status_section_mode"))
 
     def _on_section_line_changed(self, p1: QPointF, p2: QPointF):
         self._section_p1 = p1
@@ -728,9 +737,7 @@ class MainWindow(QMainWindow):
                 bands.append((floor.label, floor.height_m, rssi))
 
         self.section_view.update_section(bands, line_len)
-        self.statusBar().showMessage(
-            f"Coupe mise à jour — {line_len:.1f} m · {len(floors)} étage(s)"
-        )
+        self.statusBar().showMessage(tr("status_section_updated", length=line_len, n=len(floors)))
 
     # ── Heatmap controls ──────────────────────────────────────────────────
 
@@ -764,7 +771,7 @@ class MainWindow(QMainWindow):
 
     def _on_place_ap_requested(self, _floor_id: int):
         self.floor_plan_widget.start_place_ap_mode()
-        self.statusBar().showMessage("AP virtuel : cliquez sur la position du point d'accès")
+        self.statusBar().showMessage(tr("status_ap_place_mode"))
 
     def _on_ap_placed(self, pos):
         if self._current_floor_id is None:
@@ -782,14 +789,13 @@ class MainWindow(QMainWindow):
         while True:
             dialog = APDialog(label=label, tx=tx, freq_mhz=freq, parent=self)
             if not dialog.exec():
-                self.statusBar().showMessage("Placement AP annulé")
+                self.statusBar().showMessage(tr("status_ap_cancelled"))
                 return
             label, tx, freq = dialog.get_data()
             if building_id is not None and self._ap_name_taken(label, building_id):
                 QMessageBox.warning(
-                    self, "Nom déjà utilisé",
-                    f"Un AP nommé « {label} » existe déjà dans cette maison.\n"
-                    "Choisissez un nom différent.",
+                    self, tr("dlg_ap_name_taken_title"),
+                    tr("dlg_ap_name_taken_msg", label=label),
                 )
                 continue
             break
@@ -827,7 +833,7 @@ class MainWindow(QMainWindow):
 
     def _on_ap_move_requested(self, ap_id: int):
         self.floor_plan_widget.start_move_ap_mode(ap_id)
-        self.statusBar().showMessage("Cliquez sur la nouvelle position de l'AP")
+        self.statusBar().showMessage(tr("status_ap_move_mode"))
 
     def _on_ap_moved(self, ap_id: int, pos):
         from ..models.access_point import AccessPoint
@@ -840,7 +846,7 @@ class MainWindow(QMainWindow):
                 session.commit()
         self._mark_dirty()
         self._on_ap_panel_changed(self._current_floor_id)
-        self.statusBar().showMessage("AP repositionné")
+        self.statusBar().showMessage(tr("status_ap_moved"))
 
     def _on_measurement_deleted(self, floor_id: int):
         self._mark_dirty()
@@ -897,7 +903,7 @@ class MainWindow(QMainWindow):
                 select(FloorPlan).where(FloorPlan.floor_id == self._current_floor_id)
             ).first()
             if not fp or not fp.scale_px_per_m:
-                self.statusBar().showMessage("Simulation : plan non calibré pour cet étage")
+                self.statusBar().showMessage(tr("status_sim_no_scale"))
                 return
 
             target_floor = session.get(Floor, self._current_floor_id)
@@ -933,7 +939,7 @@ class MainWindow(QMainWindow):
 
             if not aps_db:
                 self.floor_plan_widget.clear_sim_heatmap()
-                self.statusBar().showMessage("Simulation : aucun AP virtuel placé (bouton 'Placer AP virtuel')")
+                self.statusBar().showMessage(tr("status_sim_no_ap"))
                 return
 
             # Fetch FloorPlan for each AP floor (needed for pixel→metre conversion)
@@ -962,7 +968,7 @@ class MainWindow(QMainWindow):
                 ))
 
             if not ap_infos:
-                self.statusBar().showMessage("Simulation : aucun AP sur un étage calibré")
+                self.statusBar().showMessage(tr("status_sim_no_ap_cal"))
                 return
 
             tox, toy = abs_off[target_floor.id]
@@ -984,22 +990,20 @@ class MainWindow(QMainWindow):
             grid, width_px, height_px,
             opacity=self.heatmap_controls.opacity(),
         )
-        self.statusBar().showMessage(
-            f"Simulation LDPL — {len(ap_infos)} AP(s) · {target_floor.label}"
-        )
+        self.statusBar().showMessage(tr("status_sim_done", n=len(ap_infos), floor=target_floor.label))
 
     # ── Export ────────────────────────────────────────────────────────────
 
     def _on_export_png(self):
         if self._current_floor_id is None:
-            QMessageBox.warning(self, "Export PNG", "Aucun étage sélectionné.")
+            QMessageBox.warning(self, tr("dlg_export_png_title"), tr("msg_no_floor_selected"))
             return
         with get_session() as session:
             fp = session.exec(
                 select(FloorPlan).where(FloorPlan.floor_id == self._current_floor_id)
             ).first()
             if not fp:
-                QMessageBox.warning(self, "Export PNG", "Aucun plan importé pour cet étage.")
+                QMessageBox.warning(self, tr("dlg_export_png_title"), tr("msg_no_plan_for_floor"))
                 return
             floor = session.get(Floor, self._current_floor_id)
             building = session.get(Building, floor.building_id) if floor else None
@@ -1018,7 +1022,7 @@ class MainWindow(QMainWindow):
             grid = self._current_measured_grid
 
         output_path, _ = QFileDialog.getSaveFileName(
-            self, "Exporter PNG", f"{floor_name}.png", "Images PNG (*.png)"
+            self, tr("dlg_export_png_save"), f"{floor_name}.png", tr("dlg_png_filter")
         )
         if not output_path:
             return
@@ -1034,13 +1038,13 @@ class MainWindow(QMainWindow):
                 ssid_label=self.heatmap_controls.selected_ssid(),
                 measurement_count=meas_count,
             )
-            self.statusBar().showMessage(f"PNG exporté : {output_path}")
+            self.statusBar().showMessage(tr("status_png_exported", path=output_path))
         except Exception as e:
-            QMessageBox.critical(self, "Erreur export PNG", str(e))
+            QMessageBox.critical(self, tr("dlg_export_png_error"), str(e))
 
     def _on_export_pdf(self):
         if self._current_floor_id is None:
-            QMessageBox.warning(self, "Export PDF", "Aucun étage sélectionné.")
+            QMessageBox.warning(self, tr("dlg_export_pdf_title"), tr("msg_no_floor_selected"))
             return
 
         from ..services.interpolation import idw
@@ -1096,7 +1100,7 @@ class MainWindow(QMainWindow):
                 })
 
         output_path, _ = QFileDialog.getSaveFileName(
-            self, "Rapport de couverture", f"{building_name}.pdf", "PDF (*.pdf)"
+            self, tr("dlg_export_pdf_save"), f"{building_name}.pdf", tr("dlg_pdf_filter")
         )
         if not output_path:
             return
@@ -1108,9 +1112,9 @@ class MainWindow(QMainWindow):
                 floors=floors_data,
                 ssid_label=ssid_filter,
             )
-            self.statusBar().showMessage(f"PDF exporté : {output_path}")
+            self.statusBar().showMessage(tr("status_pdf_exported", path=output_path))
         except Exception as e:
-            QMessageBox.critical(self, "Erreur export PDF", str(e))
+            QMessageBox.critical(self, tr("dlg_export_pdf_error"), str(e))
 
     def _compute_heatmap(self, fp: FloorPlan):
         from ..services.interpolation import idw
@@ -1136,9 +1140,7 @@ class MainWindow(QMainWindow):
                     points.append((pt.x_px, pt.y_px, max(relevant)))
 
         if len(points) < 2:
-            self.statusBar().showMessage(
-                "Heatmap : au moins 2 points de mesure requis"
-            )
+            self.statusBar().showMessage(tr("status_heatmap_min_pts"))
             return
 
         grid = idw(points, fp.width_px, fp.height_px)
@@ -1148,6 +1150,6 @@ class MainWindow(QMainWindow):
             opacity=self.heatmap_controls.opacity(),
         )
         self.statusBar().showMessage(
-            f"Heatmap générée — {len(points)} points"
+            tr("status_heatmap_done", n=len(points))
             + (f" · {ssid_filter}" if ssid_filter else "")
         )

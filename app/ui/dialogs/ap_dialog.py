@@ -2,11 +2,10 @@ from PySide6.QtWidgets import (
     QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit,
 )
 
-_FREQ_OPTIONS: list[tuple[str, float]] = [
-    ("2.4 GHz — ch 6 (2437 MHz)", 2437.0),
-    ("5 GHz — ch 36 (5180 MHz)", 5180.0),
-    ("6 GHz — ch 1 (5955 MHz)", 5955.0),
-]
+from ...services.i18n import tr
+
+_FREQ_KEYS = ["freq_24ghz", "freq_5ghz", "freq_6ghz"]
+_FREQ_VALUES = [2437.0, 5180.0, 5955.0]
 
 
 class APDialog(QDialog):
@@ -18,28 +17,27 @@ class APDialog(QDialog):
         parent=None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Point d'accès virtuel")
+        self.setWindowTitle(tr("dlg_ap_title"))
         self.setMinimumWidth(320)
         layout = QFormLayout(self)
 
         self._label = QLineEdit(label)
-        layout.addRow("Nom :", self._label)
+        layout.addRow(tr("lbl_name"), self._label)
 
         self._tx = QDoubleSpinBox()
         self._tx.setRange(0.0, 30.0)
         self._tx.setValue(tx)
         self._tx.setSingleStep(1.0)
         self._tx.setSuffix(" dBm")
-        self._tx.setToolTip("Puissance d'émission typique : 20 dBm (100 mW)")
-        layout.addRow("Puissance TX :", self._tx)
+        self._tx.setToolTip(tr("tooltip_tx_power"))
+        layout.addRow(tr("lbl_tx_power"), self._tx)
 
         self._freq = QComboBox()
-        for lbl, _ in _FREQ_OPTIONS:
-            self._freq.addItem(lbl)
-        # Pre-select the closest frequency option
-        best = min(range(len(_FREQ_OPTIONS)), key=lambda i: abs(_FREQ_OPTIONS[i][1] - freq_mhz))
+        for key in _FREQ_KEYS:
+            self._freq.addItem(tr(key))
+        best = min(range(len(_FREQ_VALUES)), key=lambda i: abs(_FREQ_VALUES[i] - freq_mhz))
         self._freq.setCurrentIndex(best)
-        layout.addRow("Bande Wi-Fi :", self._freq)
+        layout.addRow(tr("lbl_wifi_band"), self._freq)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -51,5 +49,5 @@ class APDialog(QDialog):
     def get_data(self) -> tuple[str, float, float]:
         label = self._label.text().strip() or "AP"
         tx = self._tx.value()
-        freq = _FREQ_OPTIONS[self._freq.currentIndex()][1]
+        freq = _FREQ_VALUES[self._freq.currentIndex()]
         return label, tx, freq

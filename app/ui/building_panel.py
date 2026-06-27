@@ -10,6 +10,7 @@ from ..models.building import Building
 from ..models.database import get_session
 from ..models.floor import Floor, FloorPlan
 from ..models.measurement import MeasurementPoint, MeasurementScan
+from ..services.i18n import tr
 from .dialogs.building_dialog import BuildingDialog
 from .dialogs.floor_dialog import FloorDialog
 
@@ -40,7 +41,7 @@ class BuildingPanel(QWidget):
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(4)
 
-        title = QLabel("Maisons")
+        title = QLabel(tr("panel_buildings_title"))
         title.setStyleSheet("font-weight: bold; font-size: 13px;")
         layout.addWidget(title)
 
@@ -49,13 +50,13 @@ class BuildingPanel(QWidget):
         self.tree.itemClicked.connect(self._on_item_clicked)
         layout.addWidget(self.tree)
 
-        self.btn_new_building = QPushButton("+ Nouvelle maison")
-        self.btn_new_floor = QPushButton("+ Nouvel étage")
-        self.btn_import = QPushButton("Importer plan PNG")
-        self.btn_calibrate = QPushButton("Calibrer l'échelle")
-        self.btn_measure = QPushButton("📡  Mesurer Wi-Fi")
-        self.btn_place_ap = QPushButton("📶  Placer AP virtuel")
-        self.btn_align = QPushButton("↔  Aligner étages")
+        self.btn_new_building = QPushButton(tr("btn_new_building"))
+        self.btn_new_floor    = QPushButton(tr("btn_new_floor"))
+        self.btn_import       = QPushButton(tr("btn_import_plan"))
+        self.btn_calibrate    = QPushButton(tr("btn_calibrate"))
+        self.btn_measure      = QPushButton(tr("btn_measure"))
+        self.btn_place_ap     = QPushButton(tr("btn_place_ap"))
+        self.btn_align        = QPushButton(tr("btn_align"))
 
         self.btn_new_floor.setEnabled(False)
         self.btn_import.setEnabled(False)
@@ -74,8 +75,8 @@ class BuildingPanel(QWidget):
         sep.setFrameShadow(QFrame.Shadow.Sunken)
         layout.addWidget(sep)
 
-        self.btn_delete_floor = QPushButton("✕  Supprimer l'étage")
-        self.btn_delete_building = QPushButton("✕  Supprimer la maison")
+        self.btn_delete_floor    = QPushButton(tr("btn_delete_floor"))
+        self.btn_delete_building = QPushButton(tr("btn_delete_building"))
         self.btn_delete_floor.setEnabled(False)
         self.btn_delete_building.setEnabled(False)
         self.btn_delete_floor.setStyleSheet("color: #c0392b;")
@@ -227,8 +228,8 @@ class BuildingPanel(QWidget):
                 return
             label = floor.label
         reply = QMessageBox.question(
-            self, "Supprimer l'étage",
-            f"Supprimer « {label} » et toutes ses mesures ?",
+            self, tr("dlg_delete_floor_title"),
+            tr("dlg_delete_floor_msg", label=label),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:
@@ -256,8 +257,8 @@ class BuildingPanel(QWidget):
                 return
             name = building.name
         reply = QMessageBox.question(
-            self, "Supprimer la maison",
-            f"Supprimer « {name} » et tous ses étages et mesures ?",
+            self, tr("dlg_delete_building_title"),
+            tr("dlg_delete_building_msg", name=name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:

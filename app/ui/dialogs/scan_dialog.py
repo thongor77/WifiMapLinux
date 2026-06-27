@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QTableWidget, QTableWidgetItem, QVBoxLayout,
 )
 
+from ...services.i18n import tr
 from ...services.scanner import WifiNetwork
 
 
@@ -18,19 +19,22 @@ def _signal_color(dbm: int) -> str:
 class ScanDialog(QDialog):
     def __init__(self, networks: list[WifiNetwork], parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Résultats du scan Wi-Fi")
+        self.setWindowTitle(tr("dlg_scan_title"))
         self.setMinimumSize(620, 380)
         self._networks = networks
 
         layout = QVBoxLayout(self)
 
         count = len(networks)
-        summary = QLabel(f"{count} réseau{'x' if count > 1 else ''} détecté{'s' if count > 1 else ''}")
+        summary = QLabel(tr("scan_summary", n=count))
         summary.setStyleSheet("font-weight: bold;")
         layout.addWidget(summary)
 
         self._table = QTableWidget(count, 5)
-        self._table.setHorizontalHeaderLabels(["SSID", "BSSID", "Signal (dBm)", "Canal", "Fréq. (MHz)"])
+        self._table.setHorizontalHeaderLabels([
+            tr("col_ssid"), tr("col_bssid"), tr("col_signal"),
+            tr("col_channel"), tr("col_freq"),
+        ])
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -52,14 +56,14 @@ class ScanDialog(QDialog):
 
         form = QFormLayout()
         self._label_edit = QLineEdit()
-        self._label_edit.setPlaceholderText("ex: Salon, Chambre 1…")
-        form.addRow("Libellé (optionnel) :", self._label_edit)
+        self._label_edit.setPlaceholderText(tr("ph_scan_label"))
+        form.addRow(tr("lbl_scan_label"), self._label_edit)
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Save).setText("Enregistrer")
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText(tr("btn_save"))
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)

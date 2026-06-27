@@ -8,6 +8,7 @@ from sqlmodel import select
 from ..models.access_point import AccessPoint
 from ..models.database import get_session
 from ..models.floor import Floor
+from ..services.i18n import tr
 from .dialogs.ap_dialog import APDialog
 
 _ROLE = Qt.ItemDataRole.UserRole
@@ -38,7 +39,7 @@ class APPanel(QWidget):
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(4)
 
-        title = QLabel("APs virtuels")
+        title = QLabel(tr("panel_aps_title"))
         title.setStyleSheet("font-weight: bold; font-size: 13px;")
         layout.addWidget(title)
 
@@ -52,9 +53,9 @@ class APPanel(QWidget):
         self._list.itemDoubleClicked.connect(self._on_edit)
         layout.addWidget(self._list)
 
-        self._btn_edit   = QPushButton("Modifier")
-        self._btn_move   = QPushButton("↖  Déplacer")
-        self._btn_delete = QPushButton("✕  Supprimer AP")
+        self._btn_edit   = QPushButton(tr("btn_edit"))
+        self._btn_move   = QPushButton(tr("btn_move"))
+        self._btn_delete = QPushButton(tr("btn_delete_ap"))
         for btn in (self._btn_edit, self._btn_move, self._btn_delete):
             btn.setEnabled(False)
         self._btn_delete.setStyleSheet("color: #c0392b;")
@@ -138,11 +139,10 @@ class APPanel(QWidget):
                 new_label, building_id, exclude_ap_id=ap_id
             ):
                 QMessageBox.warning(
-                    self, "Nom déjà utilisé",
-                    f"Un AP nommé « {new_label} » existe déjà dans cette maison.\n"
-                    "Choisissez un nom différent.",
+                    self, tr("dlg_ap_name_taken_title"),
+                    tr("dlg_ap_name_taken_msg", label=new_label),
                 )
-                label = new_label   # keep the typed name pre-filled
+                label = new_label
                 continue
             break
 
@@ -186,8 +186,8 @@ class APPanel(QWidget):
             ap = session.get(AccessPoint, ap_id)
             label = ap.label if ap else "AP"
         reply = QMessageBox.question(
-            self, "Supprimer AP",
-            f"Supprimer l'AP « {label} » ?",
+            self, tr("dlg_delete_ap_title"),
+            tr("dlg_delete_ap_msg", label=label),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:

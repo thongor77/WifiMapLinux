@@ -2,38 +2,42 @@ from PySide6.QtWidgets import (
     QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit,
 )
 
+from ...services.i18n import tr
+
 # ADR-004 — ITU-R P.1238 floor attenuation presets
-_FLOOR_MATERIALS: list[tuple[str, float]] = [
-    ("Béton (12 dB) — défaut", 12.0),
-    ("Béton armé (18 dB)", 18.0),
-    ("Bois / plancher léger (5 dB)", 5.0),
+_FLOOR_PRESET_INDICES = [-1, 0, 1, 2, 3]
+_FLOOR_PRESET_KEYS = [
+    "floor_preset_basement",
+    "floor_preset_ground",
+    "floor_preset_1",
+    "floor_preset_2",
+    "floor_preset_3",
 ]
 
-_PRESETS: list[tuple[int, str]] = [
-    (-1, "Cave / Sous-sol"),
-    (0, "Rez-de-chaussée"),
-    (1, "1er étage"),
-    (2, "2e étage"),
-    (3, "3e étage"),
+_FLOOR_MATERIAL_KEYS = [
+    "material_concrete",
+    "material_reinforced",
+    "material_wood",
 ]
+_FLOOR_MATERIAL_VALUES = [12.0, 18.0, 5.0]
 
 
 class FloorDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Nouvel étage")
+        self.setWindowTitle(tr("dlg_new_floor_title"))
         self.setMinimumWidth(320)
 
         layout = QFormLayout(self)
 
         self.preset_combo = QComboBox()
-        for index, label in _PRESETS:
-            self.preset_combo.addItem(label, userData=index)
+        for idx, key in zip(_FLOOR_PRESET_INDICES, _FLOOR_PRESET_KEYS):
+            self.preset_combo.addItem(tr(key), userData=idx)
         self.preset_combo.currentIndexChanged.connect(self._sync_label)
-        layout.addRow("Étage :", self.preset_combo)
+        layout.addRow(tr("lbl_floor"), self.preset_combo)
 
         self.label_edit = QLineEdit()
-        layout.addRow("Libellé :", self.label_edit)
+        layout.addRow(tr("lbl_label"), self.label_edit)
 
         self.height_spin = QDoubleSpinBox()
         self.height_spin.setRange(1.5, 10.0)
@@ -41,16 +45,13 @@ class FloorDialog(QDialog):
         self.height_spin.setSingleStep(0.1)
         self.height_spin.setDecimals(1)
         self.height_spin.setSuffix(" m")
-        layout.addRow("Hauteur sous plafond :", self.height_spin)
+        layout.addRow(tr("lbl_ceiling_height"), self.height_spin)
 
         self.material_combo = QComboBox()
-        for label, _ in _FLOOR_MATERIALS:
-            self.material_combo.addItem(label)
-        self.material_combo.setToolTip(
-            "Atténuation de la dalle (ADR-004 — ITU-R P.1238)\n"
-            "Utilisée par la simulation Wi-Fi inter-étages."
-        )
-        layout.addRow("Matériau dalle :", self.material_combo)
+        for key in _FLOOR_MATERIAL_KEYS:
+            self.material_combo.addItem(tr(key))
+        self.material_combo.setToolTip(tr("tooltip_slab_material"))
+        layout.addRow(tr("lbl_slab_material"), self.material_combo)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -68,5 +69,5 @@ class FloorDialog(QDialog):
         index: int = self.preset_combo.currentData()
         label = self.label_edit.text().strip() or self.preset_combo.currentText()
         height = self.height_spin.value()
-        attenuation = _FLOOR_MATERIALS[self.material_combo.currentIndex()][1]
+        attenuation = _FLOOR_MATERIAL_VALUES[self.material_combo.currentIndex()]
         return index, label, height, attenuation
