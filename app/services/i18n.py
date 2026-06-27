@@ -208,7 +208,7 @@ _T: dict[str, dict[str, str]] = {
         "about_description":        "Outil de cartographie Wi-Fi résidentiel multi-étages pour Linux",
         "about_version":            "Version {version}",
         "about_tech_title":         "Technologies",
-        "about_tech_body":          "Python 3.11  ·  PySide6 (Qt6)  ·  NumPy  ·  SQLite  ·  Pillow",
+        "about_tech_body":          "Python 3.11 · PySide6 (Qt6) · NumPy · SQLite · Pillow",
         "about_github_btn":         "thongor77/WifiMapLinux",
 
         # ── Help dialog ───────────────────────────────────────────────────────
@@ -431,7 +431,7 @@ _T: dict[str, dict[str, str]] = {
         "about_description":        "Multi-floor residential Wi-Fi mapping tool for Linux",
         "about_version":            "Version {version}",
         "about_tech_title":         "Technologies",
-        "about_tech_body":          "Python 3.11  ·  PySide6 (Qt6)  ·  NumPy  ·  SQLite  ·  Pillow",
+        "about_tech_body":          "Python 3.11 · PySide6 (Qt6) · NumPy · SQLite · Pillow",
         "about_github_btn":         "thongor77/WifiMapLinux",
 
         # ── Help dialog ───────────────────────────────────────────────────────

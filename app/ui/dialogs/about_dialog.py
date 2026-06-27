@@ -17,7 +17,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle(tr("about_title"))
-        self.setFixedWidth(460)
+        self.setFixedWidth(520)
         self.setModal(True)
         self._build_ui()
 
