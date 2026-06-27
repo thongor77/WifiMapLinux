@@ -175,6 +175,24 @@ class MainWindow(QMainWindow):
             lang_group.addAction(action)
             lang_menu.addAction(action)
 
+        help_menu = self.menuBar().addMenu(tr("menu_help"))
+        act_help = QAction(tr("menu_help_help"), self)
+        act_help.setShortcut("F1")
+        act_help.triggered.connect(self._on_help)
+        help_menu.addAction(act_help)
+        help_menu.addSeparator()
+        act_about = QAction(tr("menu_help_about"), self)
+        act_about.triggered.connect(self._on_about)
+        help_menu.addAction(act_about)
+
+    def _on_help(self):
+        from .dialogs.help_dialog import HelpDialog
+        HelpDialog(self).exec()
+
+    def _on_about(self):
+        from .dialogs.about_dialog import AboutDialog
+        AboutDialog(self).exec()
+
     def _on_language_changed(self, lang_code: str):
         _get_settings().language = lang_code
         _save_settings()

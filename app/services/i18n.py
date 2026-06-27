@@ -17,6 +17,9 @@ _T: dict[str, dict[str, str]] = {
         "menu_language":            "Langue",
         "menu_language_fr":         "Français",
         "menu_language_en":         "English",
+        "menu_help":                "Aide",
+        "menu_help_help":           "Aide…",
+        "menu_help_about":          "À propos…",
 
         # ── Window title ──────────────────────────────────────────────────────
         "title_new_project":        "Nouveau projet",
@@ -199,6 +202,29 @@ _T: dict[str, dict[str, str]] = {
         "freq_24ghz":               "2.4 GHz — ch 6 (2437 MHz)",
         "freq_5ghz":                "5 GHz — ch 36 (5180 MHz)",
         "freq_6ghz":                "6 GHz — ch 1 (5955 MHz)",
+
+        # ── About dialog ──────────────────────────────────────────────────────
+        "about_title":              "À propos de WifiMapLinux",
+        "about_description":        "Outil de cartographie Wi-Fi résidentiel multi-étages pour Linux",
+        "about_version":            "Version {version}",
+        "about_tech_title":         "Technologies",
+        "about_tech_body":          "Python 3.11  ·  PySide6 (Qt6)  ·  NumPy  ·  SQLite  ·  Pillow",
+        "about_github_btn":         "thongor77/WifiMapLinux",
+
+        # ── Help dialog ───────────────────────────────────────────────────────
+        "help_title":               "Aide — WifiMapLinux",
+        "help_no_content":          "Aucun contenu pour ce sujet.",
+        "help_section_desc":        "Description",
+        "help_section_steps":       "Étapes",
+        "help_section_tips":        "Conseils",
+        "help_topic_project":       "Créer un projet",
+        "help_topic_calibrate":     "Calibrer l'échelle",
+        "help_topic_measure":       "Mesurer le Wi-Fi",
+        "help_topic_heatmap":       "Heatmap de couverture",
+        "help_topic_simulation":    "Simulation LDPL",
+        "help_topic_section":       "Coupe verticale",
+        "help_topic_alignment":     "Alignement inter-étages",
+        "help_topic_export":        "Export",
     },
 
     "en": {
@@ -214,6 +240,9 @@ _T: dict[str, dict[str, str]] = {
         "menu_language":            "Language",
         "menu_language_fr":         "Français",
         "menu_language_en":         "English",
+        "menu_help":                "Help",
+        "menu_help_help":           "Help…",
+        "menu_help_about":          "About…",
 
         # ── Window title ──────────────────────────────────────────────────────
         "title_new_project":        "New project",
@@ -396,6 +425,29 @@ _T: dict[str, dict[str, str]] = {
         "freq_24ghz":               "2.4 GHz — ch 6 (2437 MHz)",
         "freq_5ghz":                "5 GHz — ch 36 (5180 MHz)",
         "freq_6ghz":                "6 GHz — ch 1 (5955 MHz)",
+
+        # ── About dialog ──────────────────────────────────────────────────────
+        "about_title":              "About WifiMapLinux",
+        "about_description":        "Multi-floor residential Wi-Fi mapping tool for Linux",
+        "about_version":            "Version {version}",
+        "about_tech_title":         "Technologies",
+        "about_tech_body":          "Python 3.11  ·  PySide6 (Qt6)  ·  NumPy  ·  SQLite  ·  Pillow",
+        "about_github_btn":         "thongor77/WifiMapLinux",
+
+        # ── Help dialog ───────────────────────────────────────────────────────
+        "help_title":               "Help — WifiMapLinux",
+        "help_no_content":          "No content for this topic.",
+        "help_section_desc":        "Description",
+        "help_section_steps":       "Steps",
+        "help_section_tips":        "Tips",
+        "help_topic_project":       "Create a project",
+        "help_topic_calibrate":     "Calibrate scale",
+        "help_topic_measure":       "Measure Wi-Fi",
+        "help_topic_heatmap":       "Coverage heatmap",
+        "help_topic_simulation":    "LDPL simulation",
+        "help_topic_section":       "Vertical section",
+        "help_topic_alignment":     "Inter-floor alignment",
+        "help_topic_export":        "Export",
     },
 }
 
