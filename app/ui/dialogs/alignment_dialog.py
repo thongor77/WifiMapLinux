@@ -216,6 +216,7 @@ class AlignmentDialog(QDialog):
         ref_scale_px_per_m: float,
         cur_scale_px_per_m: float | None = None,
         initial_offset_m: tuple[float, float] | None = None,
+        initial_scale_xy: tuple[float, float] | None = None,
         parent=None,
     ):
         super().__init__(parent)
