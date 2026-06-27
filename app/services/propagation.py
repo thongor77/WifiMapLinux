@@ -29,10 +29,11 @@ def simulate_floor(
     target_z_m: float,
     target_boffset_x: float,
     target_boffset_y: float,
-    target_scale: float,      # px/m of target floor plan
+    target_scale: float,           # effective px/m in X for target floor plan
     fp_width_px: int,
     fp_height_px: int,
     grid_size: int = 150,
+    target_scale_y: float | None = None,  # effective px/m in Y (defaults to target_scale)
 ) -> np.ndarray:
     """
     Log-Distance Path Loss 3D simulation for one floor.
@@ -44,13 +45,15 @@ def simulate_floor(
     if not aps:
         return np.full((grid_size, grid_size), np.nan)
 
+    scale_y = target_scale_y if target_scale_y is not None else target_scale
+
     xs = np.linspace(0.0, float(fp_width_px), grid_size)
     ys = np.linspace(0.0, float(fp_height_px), grid_size)
     gx, gy = np.meshgrid(xs, ys)   # (G, G) pixel coords on target floor plan
 
     # Grid cells in building coordinates (metres)
     gbx = target_boffset_x + gx / target_scale
-    gby = target_boffset_y + gy / target_scale
+    gby = target_boffset_y + gy / scale_y
 
     best = np.full((grid_size, grid_size), -300.0)
 

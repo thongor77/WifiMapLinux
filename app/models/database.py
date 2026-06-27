@@ -1,5 +1,26 @@
 from pathlib import Path
+from sqlalchemy import text
 from sqlmodel import create_engine, Session, SQLModel
+
+
+def _migrate(engine) -> None:
+    """Add columns introduced after initial schema creation."""
+    new_cols = [
+        ("floor", "align_scale_x", "FLOAT NOT NULL DEFAULT 1.0"),
+        ("floor", "align_scale_y", "FLOAT NOT NULL DEFAULT 1.0"),
+    ]
+    with engine.connect() as conn:
+        for table, col, definition in new_cols:
+            existing = {
+                r[1] for r in conn.execute(
+                    text(f"PRAGMA table_info({table})")
+                ).fetchall()
+            }
+            if col not in existing:
+                conn.execute(text(
+                    f"ALTER TABLE {table} ADD COLUMN {col} {definition}"
+                ))
+        conn.commit()
 
 _engine = None
 DATA_DIR: Path = Path("data")
@@ -15,6 +36,7 @@ def init_db(data_dir: Path) -> None:
     from app.models.measurement import MeasurementPoint, MeasurementScan  # noqa
     from app.models.access_point import AccessPoint  # noqa
     SQLModel.metadata.create_all(_engine)
+    _migrate(_engine)
 
 
 def get_session() -> Session:

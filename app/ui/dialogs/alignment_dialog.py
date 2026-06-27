@@ -152,7 +152,9 @@ class _ResizableOverlay(QGraphicsPixmapItem):
 
 class _AlignmentView(QGraphicsView):
     def __init__(self, ref_pixmap: QPixmap, overlay_pixmap: QPixmap,
-                 initial_offset_px: tuple[float, float] | None = None, parent=None):
+                 initial_offset_px: tuple[float, float] | None = None,
+                 initial_scale_xy: tuple[float, float] | None = None,
+                 parent=None):
         super().__init__(parent)
         scene = QGraphicsScene(self)
         self.setScene(scene)
@@ -164,6 +166,8 @@ class _AlignmentView(QGraphicsView):
         self._overlay = _ResizableOverlay(overlay_pixmap)
         scene.addItem(self._overlay)
 
+        if initial_scale_xy:
+            self._overlay.set_scale_xy(*initial_scale_xy)
         if initial_offset_px:
             self._overlay.setPos(initial_offset_px[0], initial_offset_px[1])
 
@@ -251,7 +255,7 @@ class AlignmentDialog(QDialog):
         info.setWordWrap(True)
         layout.addWidget(info)
 
-        self._view = _AlignmentView(ref_px, cur_px, initial_offset_px)
+        self._view = _AlignmentView(ref_px, cur_px, initial_offset_px, initial_scale_xy)
         layout.addWidget(self._view, stretch=1)
 
         # Scale spinboxes
@@ -281,6 +285,11 @@ class AlignmentDialog(QDialog):
 
         self._view._overlay.scale_x_changed_cb = self._sync_x
         self._view._overlay.scale_y_changed_cb = self._sync_y
+
+        # Sync spinboxes with any pre-loaded scale
+        if initial_scale_xy:
+            self._sync_x(initial_scale_xy[0] * 100.0)
+            self._sync_y(initial_scale_xy[1] * 100.0)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
@@ -320,3 +329,6 @@ class AlignmentDialog(QDialog):
     def offset_m(self) -> tuple[float, float]:
         ox, oy = self._view.offset_px()
         return ox / self._ref_scale, oy / self._ref_scale
+
+    def scale_xy(self) -> tuple[float, float]:
+        return self._view._overlay.scale_x(), self._view._overlay.scale_y()

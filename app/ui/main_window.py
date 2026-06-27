@@ -283,20 +283,27 @@ class MainWindow(QMainWindow):
             ref_scale = ref_fp.scale_px_per_m
             cur_scale = cur_fp.scale_px_per_m
             saved_offset = (cur_floor.offset_x_m, cur_floor.offset_y_m)
+            saved_scale = (cur_floor.align_scale_x, cur_floor.align_scale_y)
 
         dialog = AlignmentDialog(ref_path, cur_path, ref_scale, cur_scale,
-                                 initial_offset_m=saved_offset, parent=self)
+                                 initial_offset_m=saved_offset,
+                                 initial_scale_xy=saved_scale,
+                                 parent=self)
         if dialog.exec():
             ox_m, oy_m = dialog.offset_m()
+            sx, sy = dialog.scale_xy()
             with get_session() as session:
                 floor = session.get(Floor, floor_id)
                 if floor:
                     floor.offset_x_m = ox_m
                     floor.offset_y_m = oy_m
+                    floor.align_scale_x = sx
+                    floor.align_scale_y = sy
                     session.add(floor)
                     session.commit()
             self.statusBar().showMessage(
-                f"Recalage sauvegardé — Δx={ox_m:.2f} m, Δy={oy_m:.2f} m"
+                f"Recalage sauvegardé — Δx={ox_m:.2f} m, Δy={oy_m:.2f} m "
+                f"· échelle {sx:.0%} × {sy:.0%}"
             )
 
     def _on_floor_selected(self, floor_id: int):
@@ -553,10 +560,10 @@ class MainWindow(QMainWindow):
             # Section line endpoints in building metres
             ref_ox, ref_oy = abs_off[self._section_floor_id]
             scale = ref_fp.scale_px_per_m
-            bx1 = ref_ox + self._section_p1.x() / scale
-            by1 = ref_oy + self._section_p1.y() / scale
-            bx2 = ref_ox + self._section_p2.x() / scale
-            by2 = ref_oy + self._section_p2.y() / scale
+            bx1 = ref_ox + self._section_p1.x() * ref_floor.align_scale_x / scale
+            by1 = ref_oy + self._section_p1.y() * ref_floor.align_scale_y / scale
+            bx2 = ref_ox + self._section_p2.x() * ref_floor.align_scale_x / scale
+            by2 = ref_oy + self._section_p2.y() * ref_floor.align_scale_y / scale
             line_len = _sqrt((bx2 - bx1) ** 2 + (by2 - by1) ** 2)
             if line_len < 0.01:
                 return
@@ -601,9 +608,11 @@ class MainWindow(QMainWindow):
                 # Convert building-coord sample points to this floor's pixel coords
                 ox, oy = abs_off[floor.id]
                 s = fps.scale_px_per_m
+                asx = floor.align_scale_x
+                asy = floor.align_scale_y
                 queries = [
-                    ((bx1 + t * (bx2 - bx1) - ox) * s,
-                     (by1 + t * (by2 - by1) - oy) * s)
+                    ((bx1 + t * (bx2 - bx1) - ox) * s / asx,
+                     (by1 + t * (by2 - by1) - oy) * s / asy)
                     for t in t_vals
                 ]
                 rssi = idw_points(source, queries)
@@ -805,8 +814,8 @@ class MainWindow(QMainWindow):
                 ap_floor = floor_by_id[ap.floor_id]
                 ox, oy = abs_off[ap.floor_id]
                 ap_infos.append(APSimInfo(
-                    bx_m=ox + ap.x_px / ap_fp.scale_px_per_m,
-                    by_m=oy + ap.y_px / ap_fp.scale_px_per_m,
+                    bx_m=ox + ap.x_px * ap_floor.align_scale_x / ap_fp.scale_px_per_m,
+                    by_m=oy + ap.y_px * ap_floor.align_scale_y / ap_fp.scale_px_per_m,
                     z_m=z_heights[ap.floor_id],
                     floor_index=ap_floor.index,
                     tx_dbm=ap.tx_power_dbm,
@@ -821,13 +830,16 @@ class MainWindow(QMainWindow):
             tox, toy = abs_off[target_floor.id]
             tz = z_heights[target_floor.id]
             width_px, height_px = fp.width_px, fp.height_px
-            scale = fp.scale_px_per_m
+            # Effective scale accounts for alignment scale correction
+            eff_scale_x = fp.scale_px_per_m / target_floor.align_scale_x
+            eff_scale_y = fp.scale_px_per_m / target_floor.align_scale_y
 
         grid = simulate_floor(
             ap_infos,
             target_floor.index,
-            tz, tox, toy, scale,
+            tz, tox, toy, eff_scale_x,
             width_px, height_px,
+            target_scale_y=eff_scale_y,
         )
         self._current_sim_grid = grid
         self.floor_plan_widget.set_sim_heatmap(

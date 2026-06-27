@@ -15,6 +15,8 @@ class Floor(SQLModel, table=True):
     floor_attenuation_db: float = Field(default=12.0)
     offset_x_m: float = Field(default=0.0)
     offset_y_m: float = Field(default=0.0)
+    align_scale_x: float = Field(default=1.0)
+    align_scale_y: float = Field(default=1.0)
 
     building: Optional["Building"] = Relationship(back_populates="floors")
     floorplan: Optional["FloorPlan"] = Relationship(back_populates="floor")
