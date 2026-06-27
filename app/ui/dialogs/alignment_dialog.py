@@ -18,7 +18,7 @@ class _ResizableOverlay(QGraphicsPixmapItem):
     Dragging anywhere else translates the item.
     """
 
-    _H = 14        # handle visual size in screen pixels (compensated)
+    _TARGET_PX = 20  # handle size in screen pixels — fixed regardless of zoom/scale
     _RIGHT  = "right"
     _BOTTOM = "bottom"
     _CORNER = "corner"
@@ -32,13 +32,17 @@ class _ResizableOverlay(QGraphicsPixmapItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
         self.setAcceptHoverEvents(True)
         self.setTransformOriginPoint(0, 0)
-        self._active = None          # which handle is being dragged
+        self._active = None
         self._origin_scene = QPointF()
         self._start_mouse = QPointF()
         self._start_sx = 1.0
         self._start_sy = 1.0
         self.scale_x_changed_cb = None
         self.scale_y_changed_cb = None
+        # Cached local sizes computed from the painter transform during paint().
+        # Used by hit detection so click targets match what is drawn on screen.
+        self._chx: float = self._TARGET_PX  # local units per handle in X
+        self._chy: float = self._TARGET_PX  # local units per handle in Y
 
     # ── Scale helpers ─────────────────────────────────────────────────────
 
@@ -52,23 +56,18 @@ class _ResizableOverlay(QGraphicsPixmapItem):
 
     # ── Handle geometry (local item coordinates) ──────────────────────────
 
-    def _hx(self) -> float:
-        return self._H / max(0.01, self._sx)
-
-    def _hy(self) -> float:
-        return self._H / max(0.01, self._sy)
-
-    def _handles(self) -> dict:
+    def _handles(self, hx: float | None = None, hy: float | None = None) -> dict:
+        hx = hx if hx is not None else self._chx
+        hy = hy if hy is not None else self._chy
         w = self.pixmap().width()
         h = self.pixmap().height()
-        hx, hy = self._hx(), self._hy()
         return {
-            self._RIGHT:  QRectF(w - hx,       h / 2 - hy / 2, hx, hy),
-            self._BOTTOM: QRectF(w / 2 - hx / 2, h - hy,       hx, hy),
-            self._CORNER: QRectF(w - hx,        h - hy,         hx, hy),
+            self._RIGHT:  QRectF(w - hx,         h / 2 - hy / 2, hx, hy),
+            self._BOTTOM: QRectF(w / 2 - hx / 2, h - hy,         hx, hy),
+            self._CORNER: QRectF(w - hx,          h - hy,         hx, hy),
         }
 
-    def _hit(self, pos: QPointF):
+    def _hit(self, pos: QPointF) -> str | None:
         for name, rect in self._handles().items():
             if rect.contains(pos):
                 return name
@@ -78,11 +77,20 @@ class _ResizableOverlay(QGraphicsPixmapItem):
 
     def paint(self, painter, option, widget=None):
         super().paint(painter, option, widget)
+        # worldTransform() maps local item coords → screen pixels.
+        # m11 = screen_px per local_unit in X  (= sx * view_zoom_x)
+        # m22 = screen_px per local_unit in Y  (= sy * view_zoom_y)
+        m = painter.worldTransform()
+        mx = max(0.01, abs(m.m11()))
+        my = max(0.01, abs(m.m22()))
+        hx = self._TARGET_PX / mx   # local units for TARGET_PX screen pixels in X
+        hy = self._TARGET_PX / my   # local units for TARGET_PX screen pixels in Y
+        self._chx, self._chy = hx, hy  # cache for hit detection
+
         painter.save()
-        pen_w = 2.0 / max(0.01, (self._sx + self._sy) / 2)
-        painter.setPen(QPen(QColor("#ffffff"), pen_w))
+        painter.setPen(QPen(QColor("#ffffff"), 2.0 / mx))
         painter.setBrush(QColor("#2980b9"))
-        for rect in self._handles().values():
+        for rect in self._handles(hx, hy).values():
             painter.drawRect(rect)
         painter.restore()
 
