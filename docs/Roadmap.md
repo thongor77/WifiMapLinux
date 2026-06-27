@@ -87,6 +87,18 @@ Planned scope:
 - **Packaging**: PyInstaller → single Linux binary
 - **SVG export**: floor plan import with automatic wall detection
 - **Rust module (PyO3)**: if performance is needed for propagation/interpolation
+- **Router/box model selector**: let the user pick their actual device in the AP dialog;
+  `effective_pire_dbm` (Tx + antenna gain) from the router DB replaces the generic
+  `tx_power_dbm` in the LDPL simulation. Data source: `docs/Src/wifi_routers_db.json`
+  (26 devices, WiFi 5–7, FR ISP boxes included). Confidence disclaimer required in the UI
+  (most values are `estimated`, not `verified`). Standard "Generic" preset preserved as default.
+  Extend the DB with non-mesh WiFi repeaters (TP-Link RE series, Netgear EX series, ISP
+  repeaters) as a new `category: "repeater"`. In the AP placement dialog, add a mode toggle:
+  **Répéteur WiFi** (applies ~-4 dB penalty to PIRE — half-duplex reception loss) vs
+  **Mode AP câblé** (full nominal PIRE). Mesh nodes already in DB require no penalty.
+- **i18n**: multi-language UI (FR/EN minimum) — reference implementation: `~/claude-projects/nmlinux/`
+- **Help system**: contextual help or integrated documentation — reference: nmlinux
+- **About dialog**: version number, author, project links — reference: nmlinux
 
 ---
 

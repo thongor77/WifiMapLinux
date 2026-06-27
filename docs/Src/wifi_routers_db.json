@@ -1,0 +1,1283 @@
+{
+  "$schema": "wifi-router-db/v1.1",
+  "metadata": {
+    "version": "1.1.0",
+    "created": "2026-06-27",
+    "updated": "2026-06-27",
+    "changelog": "v1.1 — Correction Freebox Delta (WiFi 5 au lancement 2018, pas WiFi 6E). Séparation en 3 entrées par révision hardware. Correction Freebox Pop (WiFi 5 au lancement 2020, WiFi 6 en oct 2022, WiFi 7 en mars 2024). Toutes les dates de release vérifiées sur sources primaires.",
+    "description": "Base de données de référence WiFi — caractéristiques radio et réseau des principaux routeurs et box FAI",
+    "regulatory_note": "En Europe (ETSI), la puissance d'émission est plafonnée : 20 dBm @ 2.4GHz, 23 dBm @ 5GHz/6GHz. Ces valeurs sont identiques pour tous les modèles conformes. La différenciation réelle provient du gain antenne (dBi), du standard WiFi, de la configuration MIMO et du beamforming.",
+    "tx_power_etsi_ceiling": {
+      "band_2_4ghz_dbm": 20,
+      "band_2_4ghz_mw": 100,
+      "band_5ghz_dbm": 23,
+      "band_5ghz_mw": 200,
+      "band_6ghz_dbm": 23,
+      "band_6ghz_mw": 200
+    },
+    "confidence_levels": {
+      "verified": "Données issues de fiche FCC, datasheet constructeur, deviwiki ou article de lancement vérifié",
+      "estimated": "Valeur typique de la gamme, non publiée officiellement par le fabricant",
+      "unavailable": "Donnée non publiée et non trouvée dans les sources ouvertes"
+    }
+  },
+
+  "devices": [
+
+    {
+      "id": "asus-rt-ax86u",
+      "brand": "ASUS",
+      "model": "RT-AX86U",
+      "category": "router",
+      "isp": null,
+      "release_year": 2020,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 3,
+        "internal_count": 1,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "3x3:3 (2.4GHz) / 4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 186, "area_confidence": "verified" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "AiMesh",
+      "data_sources": ["dongknows.com/asus-rt-ax86u-review", "asus.com/techspec/rt-ax86u"]
+    },
+
+    {
+      "id": "asus-rt-ax88u",
+      "brand": "ASUS",
+      "model": "RT-AX88U",
+      "category": "router",
+      "isp": null,
+      "release_year": 2019,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 4,
+        "internal_count": 4,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 (2.4GHz) / 4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 250, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 8, "max_speed_gbps": 1.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "AiMesh",
+      "data_sources": ["asus.com/techspec/rt-ax88u", "snbforums.com"]
+    },
+
+    {
+      "id": "asus-rt-be96u",
+      "brand": "ASUS",
+      "model": "RT-BE96U",
+      "category": "router",
+      "isp": null,
+      "release_year": 2023,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 8,
+        "internal_count": 0,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": 28.0
+      },
+      "coverage": { "area_m2": 325, "area_confidence": "estimated" },
+      "max_devices": 128,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 10.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "AiMesh",
+      "data_sources": ["highspeedinternet.com/rt-be96u-review"]
+    },
+
+    {
+      "id": "asus-zenwifi-pro-et12",
+      "brand": "ASUS",
+      "model": "ZenWiFi Pro ET12",
+      "category": "mesh_system",
+      "isp": null,
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "2x2:2 (2.4GHz) / 2x2:2 (5GHz) / 2x2:2 (6GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 280, "area_confidence": "estimated" },
+      "max_devices": 90,
+      "ethernet": { "wan_ports": 1, "lan_ports": 2, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "AiMesh",
+      "data_sources": ["asus.com/zenwifi-pro-et12"]
+    },
+
+    {
+      "id": "tplink-archer-ax73",
+      "brand": "TP-Link",
+      "model": "Archer AX73",
+      "category": "router",
+      "isp": null,
+      "release_year": 2020,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "verified"
+      },
+      "antennas": {
+        "external_count": 6,
+        "internal_count": 0,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "2x2:2 (2.4GHz) / 4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 250, "area_confidence": "estimated" },
+      "max_devices": 128,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "OneMesh",
+      "data_sources": ["fccid.io/TE7AX73", "deviwiki.com/TP-LINK_Archer_AX73", "tp-link.com/archer-ax73"]
+    },
+
+    {
+      "id": "tplink-archer-ax90",
+      "brand": "TP-Link",
+      "model": "Archer AX90",
+      "category": "router",
+      "isp": null,
+      "release_year": 2020,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "5GHz-2"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 8,
+        "internal_count": 0,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 (5GHz principal)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 280, "area_confidence": "estimated" },
+      "max_devices": 100,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "OneMesh",
+      "data_sources": ["tp-link.com/archer-ax90"]
+    },
+
+    {
+      "id": "tplink-archer-be800",
+      "brand": "TP-Link",
+      "model": "Archer BE800",
+      "category": "router",
+      "isp": null,
+      "release_year": 2023,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 8,
+        "internal_count": 0,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 par bande principale"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": 28.0
+      },
+      "coverage": { "area_m2": 350, "area_confidence": "estimated" },
+      "max_devices": 200,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 10.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "OneMesh",
+      "data_sources": ["tp-link.com/archer-be800"]
+    },
+
+    {
+      "id": "tplink-deco-be65",
+      "brand": "TP-Link",
+      "model": "Deco BE65",
+      "category": "mesh_system",
+      "isp": null,
+      "release_year": 2024,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "2x2:2 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 300, "area_confidence": "estimated" },
+      "max_devices": 150,
+      "ethernet": { "wan_ports": 1, "lan_ports": 3, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "TP-Link Deco / EasyMesh",
+      "data_sources": ["techradar.com/deco-be65-review", "tp-link.com/deco-be65"]
+    },
+
+    {
+      "id": "tplink-deco-xe75",
+      "brand": "TP-Link",
+      "model": "Deco XE75",
+      "category": "mesh_system",
+      "isp": null,
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "2x2:2 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 250, "area_confidence": "estimated" },
+      "max_devices": 100,
+      "ethernet": { "wan_ports": 1, "lan_ports": 2, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "TP-Link Deco / EasyMesh",
+      "data_sources": ["tp-link.com/deco-xe75"]
+    },
+
+    {
+      "id": "netgear-nighthawk-rax80",
+      "brand": "Netgear",
+      "model": "Nighthawk RAX80",
+      "category": "router",
+      "isp": null,
+      "release_year": 2019,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 8,
+        "internal_count": 0,
+        "gain_dbi_typical": 4.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 24.0,
+        "band_5ghz": 27.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 250, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 5, "max_speed_gbps": 1.0 },
+      "mesh_capable": false,
+      "mesh_protocol": null,
+      "data_sources": ["smallnetbuilder.com/rax80-review", "netgear.com/rax80"]
+    },
+
+    {
+      "id": "netgear-nighthawk-raxe500",
+      "brand": "Netgear",
+      "model": "Nighthawk RAXE500",
+      "category": "router",
+      "isp": null,
+      "release_year": 2021,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 12,
+        "internal_count": 0,
+        "gain_dbi_typical": 4.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 24.0,
+        "band_5ghz": 27.0,
+        "band_6ghz": 27.0
+      },
+      "coverage": { "area_m2": 280, "area_confidence": "estimated" },
+      "max_devices": 60,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": false,
+      "mesh_protocol": null,
+      "data_sources": ["netgear.com/raxe500"]
+    },
+
+    {
+      "id": "netgear-orbi-rbk863s",
+      "brand": "Netgear",
+      "model": "Orbi RBK863S",
+      "category": "mesh_system",
+      "isp": null,
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 12,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 backhaul 6GHz dédié"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 420, "area_confidence": "estimated" },
+      "max_devices": 200,
+      "ethernet": { "wan_ports": 1, "lan_ports": 3, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Orbi",
+      "data_sources": ["netgear.com/orbi/rbk863s"]
+    },
+
+    {
+      "id": "netgear-orbi-rbe973",
+      "brand": "Netgear",
+      "model": "Orbi RBE973 (WiFi 7)",
+      "category": "mesh_system",
+      "isp": null,
+      "release_year": 2023,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 12,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 500, "area_confidence": "estimated" },
+      "max_devices": 300,
+      "ethernet": { "wan_ports": 1, "lan_ports": 3, "max_speed_gbps": 10.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "Orbi",
+      "data_sources": ["netgear.com/orbi-wifi7"]
+    },
+
+    {
+      "id": "linksys-mr9600",
+      "brand": "Linksys",
+      "model": "MR9600",
+      "category": "router",
+      "isp": null,
+      "release_year": 2020,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 8,
+        "internal_count": 0,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 250, "area_confidence": "estimated" },
+      "max_devices": 50,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "Velop / EasyMesh",
+      "data_sources": ["tomsguide.com/linksys-mr9600-review"]
+    },
+
+    {
+      "id": "linksys-velop-axe8400",
+      "brand": "Linksys",
+      "model": "Velop AXE8400 (MX8400)",
+      "category": "mesh_system",
+      "isp": null,
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 8,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "2x2:2 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 280, "area_confidence": "estimated" },
+      "max_devices": 100,
+      "ethernet": { "wan_ports": 1, "lan_ports": 2, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Velop / EasyMesh",
+      "data_sources": ["linksys.com/velop-axe8400"]
+    },
+
+    {
+      "id": "synology-rt6600ax",
+      "brand": "Synology",
+      "model": "RT6600ax",
+      "category": "router",
+      "isp": null,
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 8,
+        "internal_count": 2,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": 28.0
+      },
+      "coverage": { "area_m2": 280, "area_confidence": "estimated" },
+      "max_devices": 100,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Synology Mesh",
+      "data_sources": ["synology.com/rt6600ax"]
+    },
+
+    {
+      "id": "synology-wrx560",
+      "brand": "Synology",
+      "model": "WRX560",
+      "category": "router",
+      "isp": null,
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 4,
+        "internal_count": 0,
+        "gain_dbi_typical": 5.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 (5GHz)"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 25.0,
+        "band_5ghz": 28.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 200, "area_confidence": "estimated" },
+      "max_devices": 80,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Synology Mesh",
+      "data_sources": ["synology.com/wrx560"]
+    },
+
+    {
+      "id": "glinet-mt6000-flint2",
+      "brand": "GL.iNet",
+      "model": "MT6000 (Flint 2)",
+      "category": "router",
+      "isp": null,
+      "release_year": 2023,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 20,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "2x2:2 par bande"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": 23.0
+      },
+      "coverage": { "area_m2": 140, "area_confidence": "estimated" },
+      "max_devices": 60,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "GL.iNet Mesh / OpenWRT",
+      "data_sources": ["gl-inet.com/mt6000", "fccid.io"]
+    },
+
+    {
+      "id": "xiaomi-mi-router-ax9000",
+      "brand": "Xiaomi",
+      "model": "Mi Router AX9000",
+      "category": "router",
+      "isp": null,
+      "release_year": 2021,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "5GHz-2"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 12,
+        "internal_count": 0,
+        "gain_dbi_typical": 4.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "4x4:4 par bande 5GHz"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 24.0,
+        "band_5ghz": 27.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 300, "area_confidence": "estimated" },
+      "max_devices": 148,
+      "ethernet": { "wan_ports": 1, "lan_ports": 3, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Xiaomi Mesh",
+      "data_sources": ["mi.com/ax9000"]
+    },
+
+    {
+      "id": "freebox-ultra",
+      "brand": "Free",
+      "model": "Freebox Ultra (Server V9)",
+      "category": "isp_box",
+      "isp": "Free",
+      "release_year": 2024,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 8,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 200, "area_confidence": "estimated" },
+      "max_devices": 100,
+      "ethernet": { "wan_ports": 2, "lan_ports": 4, "max_speed_gbps": 10.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "Freebox Répéteur WiFi",
+      "data_sources": ["free.fr/freebox-ultra", "edcom.fr/comparatif-box-premium"]
+    },
+
+    {
+      "id": "freebox-pop-v8-wifi7",
+      "brand": "Free",
+      "model": "Freebox Pop (Server V8 — WiFi 7, depuis mars 2024)",
+      "category": "isp_box",
+      "isp": "Free",
+      "release_year": 2024,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "release_note": "Lancée en 2020 avec WiFi 5. Passée à WiFi 6 en oct 2022. WiFi 7 Bi-band (sans 6GHz) depuis mars 2024.",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 4,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 120, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Freebox Répéteur WiFi",
+      "data_sources": ["fibre.guide/actu/12073", "phonandroid.com/freebox-pop"]
+    },
+
+    {
+      "id": "freebox-pop-v8-wifi6",
+      "brand": "Free",
+      "model": "Freebox Pop (Server V8 — WiFi 6, oct 2022 – mars 2024)",
+      "category": "isp_box",
+      "isp": "Free",
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "release_note": "Version intermédiaire du Server Pop. WiFi 6 Bi-band activé le 6 octobre 2022 pour les nouveaux abonnés.",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 4,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 120, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Freebox Répéteur WiFi",
+      "data_sources": ["universfreebox.com/article/534495", "clubic.com/freebox-pop-wifi6"]
+    },
+
+    {
+      "id": "freebox-pop-v8-wifi5",
+      "brand": "Free",
+      "model": "Freebox Pop (Server V8 — WiFi 5, lancement 2020)",
+      "category": "isp_box",
+      "isp": "Free",
+      "release_year": 2020,
+      "wifi_standard": "WiFi 5",
+      "wifi_ieee": "802.11ac",
+      "release_note": "Version originale du Server Pop au lancement. WiFi AC 2100 Bi-band 2.4GHz + 5GHz.",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 20,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 4,
+        "gain_dbi_typical": 2.5,
+        "gain_confidence": "estimated",
+        "beamforming": false,
+        "mu_mimo": false,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 22.5,
+        "band_5ghz": 22.5,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 100, "area_confidence": "estimated" },
+      "max_devices": 32,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": false,
+      "mesh_protocol": null,
+      "data_sources": ["phonandroid.com/freebox-v8", "universfreebox.com/freebox-pop"]
+    },
+
+    {
+      "id": "freebox-delta-v7-wifi6e",
+      "brand": "Free",
+      "model": "Freebox Delta (Server V7 — révision WiFi 6E, depuis juin 2022)",
+      "category": "isp_box",
+      "isp": "Free",
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "release_note": "Révision hardware du Server V7 avec WiFi 6E Tri-band. Disponible pour nouveaux abonnés en juin 2022, migration pour abonnés existants en août 2022. La box Delta n'est plus commercialisée depuis janvier 2024.",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": 26.0
+      },
+      "coverage": { "area_m2": 150, "area_confidence": "estimated" },
+      "max_devices": 80,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 10.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "Freebox Répéteur WiFi",
+      "data_sources": ["cablereview.fr/avis-freebox-delta", "phonandroid.com/free-wifi6e-freebox-delta"]
+    },
+
+    {
+      "id": "freebox-delta-v7-original",
+      "brand": "Free",
+      "model": "Freebox Delta (Server V7 — originale, décembre 2018)",
+      "category": "isp_box",
+      "isp": "Free",
+      "release_year": 2018,
+      "wifi_standard": "WiFi 5",
+      "wifi_ieee": "802.11ac",
+      "release_note": "Version originale présentée le 4 décembre 2018. WiFi 802.11ac (WiFi 5) Tri-band. Le WiFi 6E n'existait pas encore à cette date.",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "5GHz-2"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 20,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 2.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 22.5,
+        "band_5ghz": 22.5,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 120, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 10.0 },
+      "mesh_capable": false,
+      "mesh_protocol": null,
+      "data_sources": ["universfreebox.com/freebox-delta-caracteristiques", "papergeek.fr/freebox-v7"]
+    },
+
+    {
+      "id": "orange-livebox-6",
+      "brand": "Orange",
+      "model": "Livebox 6 (Livebox Max)",
+      "category": "isp_box",
+      "isp": "Orange",
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "release_note": "Lancée en avril 2022 — première box FAI française avec WiFi 6E.",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": 26.0
+      },
+      "coverage": { "area_m2": 150, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Orange WiFi Répéteur (EasyMesh)",
+      "data_sources": ["orange.fr/livebox-max", "cablereview.fr/wifi-6"]
+    },
+
+    {
+      "id": "orange-livebox-5",
+      "brand": "Orange",
+      "model": "Livebox 5",
+      "category": "isp_box",
+      "isp": "Orange",
+      "release_year": 2019,
+      "wifi_standard": "WiFi 5",
+      "wifi_ieee": "802.11ac",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 20,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 4,
+        "gain_dbi_typical": 2.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": false,
+        "mimo_config": "2x2:2"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 22.5,
+        "band_5ghz": 22.5,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 100, "area_confidence": "estimated" },
+      "max_devices": 32,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": false,
+      "mesh_protocol": null,
+      "data_sources": ["orange.fr/livebox-5"]
+    },
+
+    {
+      "id": "sfr-box-8x",
+      "brand": "SFR",
+      "model": "SFR Box 8X",
+      "category": "isp_box",
+      "isp": "SFR",
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 4,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 120, "area_confidence": "estimated" },
+      "max_devices": 64,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "SFR WiFi Max (EasyMesh)",
+      "data_sources": ["sfr.fr/box-premium", "cablereview.fr/wifi-6"]
+    },
+
+    {
+      "id": "sfr-box-premium-wifi7",
+      "brand": "SFR",
+      "model": "SFR Box Premium (WiFi 7)",
+      "category": "isp_box",
+      "isp": "SFR",
+      "release_year": 2024,
+      "wifi_standard": "WiFi 7",
+      "wifi_ieee": "802.11be",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.5,
+        "band_5ghz": 26.5,
+        "band_6ghz": 26.5
+      },
+      "coverage": { "area_m2": 180, "area_confidence": "estimated" },
+      "max_devices": 100,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "SFR WiFi Max (EasyMesh)",
+      "data_sources": ["sfr.fr/box-premium", "edcom.fr/comparatif-box-premium"]
+    },
+
+    {
+      "id": "bouygues-bbox-ultym-wifi6e",
+      "brand": "Bouygues Telecom",
+      "model": "Bbox Ultym (WiFi 6E)",
+      "category": "isp_box",
+      "isp": "Bouygues Telecom",
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6E",
+      "wifi_ieee": "802.11ax",
+      "release_note": "Première box FAI française à proposer le WiFi 6E, avant Orange et Free.",
+      "bands": { "count": 3, "list": ["2.4GHz", "5GHz", "6GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": 23,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 6,
+        "gain_dbi_typical": 3.0,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 23.0,
+        "band_5ghz": 26.0,
+        "band_6ghz": 26.0
+      },
+      "coverage": { "area_m2": 150, "area_confidence": "estimated" },
+      "max_devices": 80,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 2.5 },
+      "mesh_capable": true,
+      "mesh_protocol": "Bbox WiFi (EasyMesh)",
+      "data_sources": ["bouyguestelecom.fr/bbox-ultym", "cablereview.fr/wifi-6"]
+    },
+
+    {
+      "id": "bouygues-bbox-must",
+      "brand": "Bouygues Telecom",
+      "model": "Bbox Must (WiFi 6)",
+      "category": "isp_box",
+      "isp": "Bouygues Telecom",
+      "release_year": 2020,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 23,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 4,
+        "gain_dbi_typical": 2.5,
+        "gain_confidence": "estimated",
+        "beamforming": true,
+        "mu_mimo": true,
+        "mimo_config": "Données propriétaires non publiées"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 22.5,
+        "band_5ghz": 25.5,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 100, "area_confidence": "estimated" },
+      "max_devices": 50,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": true,
+      "mesh_protocol": "Bbox WiFi (EasyMesh)",
+      "data_sources": ["bouyguestelecom.fr/bbox-must"]
+    },
+
+    {
+      "id": "red-box",
+      "brand": "RED by SFR",
+      "model": "RED Box (WiFi 6)",
+      "category": "isp_box",
+      "isp": "RED by SFR",
+      "release_year": 2022,
+      "wifi_standard": "WiFi 6",
+      "wifi_ieee": "802.11ax",
+      "bands": { "count": 2, "list": ["2.4GHz", "5GHz"] },
+      "tx_power": {
+        "regulatory": "ETSI",
+        "band_2_4ghz_dbm": 20,
+        "band_5ghz_dbm": 20,
+        "band_6ghz_dbm": null,
+        "confidence": "estimated"
+      },
+      "antennas": {
+        "external_count": 0,
+        "internal_count": 2,
+        "gain_dbi_typical": 2.5,
+        "gain_confidence": "estimated",
+        "beamforming": false,
+        "mu_mimo": false,
+        "mimo_config": "2x2:2"
+      },
+      "effective_pire_dbm": {
+        "band_2_4ghz": 22.5,
+        "band_5ghz": 22.5,
+        "band_6ghz": null
+      },
+      "coverage": { "area_m2": 80, "area_confidence": "estimated" },
+      "max_devices": 32,
+      "ethernet": { "wan_ports": 1, "lan_ports": 4, "max_speed_gbps": 1.0 },
+      "mesh_capable": false,
+      "mesh_protocol": null,
+      "data_sources": ["red-by-sfr.fr/box"]
+    }
+
+  ]
+}
