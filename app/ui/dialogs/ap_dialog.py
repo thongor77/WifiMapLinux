@@ -10,26 +10,35 @@ _FREQ_OPTIONS: list[tuple[str, float]] = [
 
 
 class APDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        label: str = "AP",
+        tx: float = 20.0,
+        freq_mhz: float = 2437.0,
+        parent=None,
+    ):
         super().__init__(parent)
-        self.setWindowTitle("Ajouter un point d'accès virtuel")
+        self.setWindowTitle("Point d'accès virtuel")
         self.setMinimumWidth(320)
         layout = QFormLayout(self)
 
-        self._label = QLineEdit("AP")
+        self._label = QLineEdit(label)
         layout.addRow("Nom :", self._label)
 
         self._tx = QDoubleSpinBox()
         self._tx.setRange(0.0, 30.0)
-        self._tx.setValue(20.0)
+        self._tx.setValue(tx)
         self._tx.setSingleStep(1.0)
         self._tx.setSuffix(" dBm")
         self._tx.setToolTip("Puissance d'émission typique : 20 dBm (100 mW)")
         layout.addRow("Puissance TX :", self._tx)
 
         self._freq = QComboBox()
-        for label, _ in _FREQ_OPTIONS:
-            self._freq.addItem(label)
+        for lbl, _ in _FREQ_OPTIONS:
+            self._freq.addItem(lbl)
+        # Pre-select the closest frequency option
+        best = min(range(len(_FREQ_OPTIONS)), key=lambda i: abs(_FREQ_OPTIONS[i][1] - freq_mhz))
+        self._freq.setCurrentIndex(best)
         layout.addRow("Bande Wi-Fi :", self._freq)
 
         buttons = QDialogButtonBox(

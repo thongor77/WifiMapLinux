@@ -165,7 +165,17 @@ class FloorPlanWidget(QGraphicsView):
         self._add_ap_marker(x_px, y_px, label)
 
     def _add_ap_marker(self, x: float, y: float, label: str):
-        r = 10
+        r = 20
+        # White halo for contrast against any background
+        halo = self._scene.addEllipse(
+            x - r - 4, y - r - 4, (r + 4) * 2, (r + 4) * 2,
+            QPen(Qt.PenStyle.NoPen),
+            QBrush(QColor(255, 255, 255, 180)),
+        )
+        halo.setZValue(11)
+        self._ap_items.append(halo)
+
+        # Diamond body
         diamond = QPolygonF([
             QPointF(x,     y - r),
             QPointF(x + r, y),
@@ -175,21 +185,39 @@ class FloorPlanWidget(QGraphicsView):
         color = QColor("#8e44ad")
         item = self._scene.addPolygon(
             diamond,
-            QPen(color.darker(140), 1.5),
+            QPen(QColor("#ffffff"), 3.0),
             QBrush(color),
         )
         item.setZValue(12)
         item.setToolTip(label)
         self._ap_items.append(item)
 
+        # Central dot (router symbol)
+        dot = self._scene.addEllipse(x - 4, y - 4, 8, 8,
+                                      QPen(Qt.PenStyle.NoPen),
+                                      QBrush(QColor("#ffffff")))
+        dot.setZValue(13)
+        self._ap_items.append(dot)
+
+        # Label
         text = self._scene.addText(label)
         text.setDefaultTextColor(QColor("#ffffff"))
         font = text.font()
-        font.setPointSize(7)
+        font.setPointSize(9)
         font.setBold(True)
         text.setFont(font)
-        text.setPos(x + r + 2, y - 8)
-        text.setZValue(13)
+        # Dark background rect behind the text
+        br = text.boundingRect()
+        bg = self._scene.addRect(
+            x + r + 4, y - br.height() / 2,
+            br.width() + 4, br.height(),
+            QPen(Qt.PenStyle.NoPen),
+            QBrush(QColor(0, 0, 0, 160)),
+        )
+        bg.setZValue(13)
+        self._ap_items.append(bg)
+        text.setPos(x + r + 6, y - br.height() / 2)
+        text.setZValue(14)
         self._ap_items.append(text)
 
     def clear_ap_markers(self):

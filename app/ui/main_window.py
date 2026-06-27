@@ -14,6 +14,7 @@ from ..models.building import Building
 from ..models.database import DATA_DIR, get_session
 from ..models.floor import Floor, FloorPlan
 from ..models.measurement import MeasurementPoint, MeasurementScan
+from .ap_panel import APPanel
 from .building_panel import BuildingPanel
 from .floor_plan_widget import FloorPlanWidget
 from .floor_tab_bar import FloorTabBar
@@ -75,6 +76,10 @@ class MainWindow(QMainWindow):
         splitter.addWidget(right)
         splitter.setStretchFactor(1, 1)
 
+        self.ap_panel = APPanel()
+        self.ap_panel.setFixedWidth(240)
+        splitter.addWidget(self.ap_panel)
+
         self.setCentralWidget(splitter)
         self.setStatusBar(QStatusBar())
 
@@ -88,6 +93,8 @@ class MainWindow(QMainWindow):
         self.building_panel.place_ap_requested.connect(self._on_place_ap_requested)
         self.building_panel.building_deleted.connect(self._on_entity_deleted)
         self.building_panel.floor_deleted.connect(self._on_entity_deleted)
+        self.ap_panel.ap_deleted.connect(self._on_ap_panel_changed)
+        self.ap_panel.ap_edited.connect(self._on_ap_panel_changed)
         self.floor_tab_bar.floor_selected.connect(self._on_floor_selected)
         self.floor_plan_widget.calibration_ready.connect(self._on_calibration_points)
         self.floor_plan_widget.position_selected.connect(self._on_position_selected)
@@ -129,6 +136,7 @@ class MainWindow(QMainWindow):
         self.floor_tab_bar.populate([])
         self.floor_plan_widget.clear()
         self.section_view.update_section([], 0)
+        self.ap_panel.clear()
         self.statusBar().showMessage("")
 
     # ── Building / floor selection ────────────────────────────────────────
@@ -220,6 +228,8 @@ class MainWindow(QMainWindow):
         self._current_measured_grid = None
         self._current_sim_grid = None
         with get_session() as session:
+            floor = session.get(Floor, floor_id)
+            self.ap_panel.load_floor(floor_id, floor.label if floor else "")
             fp = session.exec(
                 select(FloorPlan).where(FloorPlan.floor_id == floor_id)
             ).first()
@@ -566,7 +576,7 @@ class MainWindow(QMainWindow):
             return
         from .dialogs.ap_dialog import APDialog
         from ..models.access_point import AccessPoint
-        dialog = APDialog(self)
+        dialog = APDialog(parent=self)
         if not dialog.exec():
             self.statusBar().showMessage("Placement AP annulé")
             return
@@ -580,6 +590,16 @@ class MainWindow(QMainWindow):
             session.add(ap)
             session.commit()
         self.floor_plan_widget.add_ap_marker(pos.x(), pos.y(), label)
+        self.ap_panel.refresh()
+        if self.heatmap_controls.sim_is_active():
+            self._refresh_sim_heatmap()
+
+    def _on_ap_panel_changed(self, floor_id: int):
+        if floor_id != self._current_floor_id:
+            return
+        self.floor_plan_widget.clear_ap_markers()
+        with get_session() as session:
+            self._load_ap_markers(floor_id, session)
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
         band = "2.4 GHz" if freq < 3000 else ("5 GHz" if freq < 5900 else "6 GHz")
