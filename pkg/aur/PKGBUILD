@@ -21,7 +21,7 @@ makedepends=(
     python-hatchling
 )
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('3f490338af8edf927c17f6fb7c0c625bcbc13c221a3ec3665929ba12faca5688')
+sha256sums=('7aa9d5f2e4db9cd94c0973ab47482abfc8b31e8ab4be148a9d00944b40cfa127')
 
 build() {
     cd "WifiMapLinux-${pkgver}"
