@@ -5,6 +5,8 @@ from PySide6.QtWidgets import QLabel, QStackedWidget, QVBoxLayout, QWidget
 from ..services.i18n import tr
 from ..services.interpolation import _STOPS
 
+_PLAN_TEX = 256   # floor plan texture resolution (px)
+
 
 def _build_vispy_colormap():
     """Build a vispy Colormap matching the 2D heatmap palette (_STOPS)."""
@@ -19,6 +21,24 @@ def _build_vispy_colormap():
     return Colormap(colors=ColorArray(color=colors_rgba), controls=positions)
 
 
+def _load_plan_texture(image_path: str) -> np.ndarray | None:
+    """
+    Load a floor plan PNG as a (_PLAN_TEX, _PLAN_TEX, 4) RGBA uint8 array.
+    Near-white pixels (background) are made transparent; dark pixels (walls)
+    are kept at alpha=180 so the plan reads through the volume.
+    """
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(image_path).convert('RGBA')
+        img = img.resize((_PLAN_TEX, _PLAN_TEX), PILImage.LANCZOS)
+        arr = np.array(img, dtype=np.uint8)
+        white = (arr[:, :, 0] > 210) & (arr[:, :, 1] > 210) & (arr[:, :, 2] > 210)
+        arr[:, :, 3] = np.where(white, 0, 180)
+        return arr
+    except Exception:
+        return None
+
+
 class VoxelView(QWidget):
     """3D voxel volume view — vispy SceneCanvas embedded in a QWidget."""
 
@@ -30,6 +50,7 @@ class VoxelView(QWidget):
         self._canvas = None
         self._view = None
         self._volume_visual = None
+        self._floor_plan_visuals: list = []
         self._colormap = None
 
         outer = QVBoxLayout(self)
@@ -73,23 +94,35 @@ class VoxelView(QWidget):
         self._empty_label.setText(tr("voxel_empty"))
         self._stack.setCurrentIndex(0)
 
-    def set_volume(self, voxels: np.ndarray, z_total_m: float):
-        """Render the (Z, G, G) dBm volume. Noop if vispy canvas failed."""
+    def _clear_floor_plans(self):
+        for vis in self._floor_plan_visuals:
+            vis.parent = None
+        self._floor_plan_visuals = []
+
+    def set_volume(self, voxels: np.ndarray, z_total_m: float,
+                   floor_plans: list[tuple[str | None, float]] | None = None):
+        """
+        Render the (Z, G, G) dBm volume.
+
+        floor_plans: list of (image_path | None, z_mid_frac) ordered
+                     bottom→top. z_mid_frac is the floor's vertical midpoint
+                     as a fraction of z_total_m (0 = ground, 1 = top).
+        """
         if self._canvas is None:
             return
 
         import vispy.scene
-        from vispy.scene.visuals import Volume
+        from vispy.scene.visuals import Image as VispyImage, Volume
         from vispy.visuals.transforms import STTransform
 
         Z, G, _ = voxels.shape
 
-        # Normalise dBm → [0, 1] for the colormap
+        # ── Volume ───────────────────────────────────────────────────────────
         dbm_min, dbm_max = float(_STOPS[0, 0]), float(_STOPS[-1, 0])
         norm = np.clip((voxels - dbm_min) / (dbm_max - dbm_min), 0.0, 1.0)
         norm = np.where(np.isnan(voxels), 0.0, norm).astype(np.float32)
 
-        # Flip Z: index 0 = bottom of building for natural orientation
+        # Flip Z: index 0 = bottom (RDC), index Z-1 = top
         vol_data = norm[::-1].copy()
 
         if self._volume_visual is not None:
@@ -103,10 +136,31 @@ class VoxelView(QWidget):
             parent=self._view.scene,
         )
 
-        # Scale Z so the volume looks physically proportional:
-        # make Z axis span the same visual units as the XY axis.
+        # Scale Z so the visual height matches the XY extent (cube aspect)
         z_scale = G / Z if Z > 0 else 1.0
         self._volume_visual.transform = STTransform(scale=(1.0, 1.0, z_scale))
+
+        # ── Floor plan projections ────────────────────────────────────────────
+        self._clear_floor_plans()
+        scale_xy = G / _PLAN_TEX   # maps texture pixels → volume XY units
+
+        for image_path, z_mid_frac in (floor_plans or []):
+            if not image_path:
+                continue
+            tex = _load_plan_texture(image_path)
+            if tex is None:
+                continue
+
+            img_vis = VispyImage(tex, parent=self._view.scene)
+
+            # The volume after STTransform spans Z ∈ [0, G].
+            # The plan at z_mid_frac sits at Z_world = z_mid_frac * G.
+            z_world = z_mid_frac * G
+            img_vis.transform = STTransform(
+                scale=(scale_xy, scale_xy, 1.0),
+                translate=(0.0, 0.0, z_world),
+            )
+            self._floor_plan_visuals.append(img_vis)
 
         self._view.camera.set_range()
         self._stack.setCurrentIndex(1)
@@ -115,4 +169,5 @@ class VoxelView(QWidget):
         if self._volume_visual is not None:
             self._volume_visual.parent = None
             self._volume_visual = None
+        self._clear_floor_plans()
         self._show_empty()

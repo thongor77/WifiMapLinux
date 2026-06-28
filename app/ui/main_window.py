@@ -956,6 +956,12 @@ class MainWindow(QMainWindow):
             ssid_filter = self.heatmap_controls.selected_ssid()
             floor_grids = []
             floor_heights_m = [f.height_m for f in floors]
+            floor_image_paths = []
+            for f in floors:
+                fp_img = session.exec(
+                    select(FloorPlan).where(FloorPlan.floor_id == f.id)
+                ).first()
+                floor_image_paths.append(fp_img.image_path if fp_img else None)
 
             if use_sim:
                 from ..models.access_point import AccessPoint
@@ -1055,10 +1061,19 @@ class MainWindow(QMainWindow):
                     floor_grids.append(grid)
 
         voxels, z_total_m = build_voxel_grid(floor_grids, floor_heights_m)
+
+        # Compute each floor's vertical midpoint fraction for plan projection
+        floor_plans: list[tuple[str | None, float]] = []
+        z = 0.0
+        for img_path, h_m in zip(floor_image_paths, floor_heights_m):
+            z_mid_frac = (z + h_m / 2.0) / z_total_m if z_total_m > 0 else 0.0
+            floor_plans.append((img_path, z_mid_frac))
+            z += h_m
+
         if np.all(np.isnan(voxels)):
             self.voxel_view.clear()
         else:
-            self.voxel_view.set_volume(voxels, z_total_m)
+            self.voxel_view.set_volume(voxels, z_total_m, floor_plans=floor_plans)
 
     # ── Simulation heatmap ────────────────────────────────────────────────
 
