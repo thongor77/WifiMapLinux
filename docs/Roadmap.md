@@ -103,11 +103,27 @@ Implemented:
   **Mode AP câblé** (full nominal PIRE). Mesh nodes already in DB require no penalty.
 - **i18n**: multi-language UI (FR/EN minimum) — reference implementation: `~/claude-projects/nmlinux/`
 - **Help system**: contextual help or integrated documentation — reference: nmlinux
-- **About dialog**: version number, author, project links — reference: nmlinux
+- **About dialog**: version number, author, project links — ✅ Done (v2.0+)
+- **i18n**: multi-language FR/EN — ✅ Done (v2.0+)
+- **Help system**: contextual help — ✅ Done (v2.0+)
+
+### AP height in simulation
+Add a `height_m` field to `AccessPoint` (e.g. 1.0 m default, configurable in APDialog).
+The LDPL 3D model already propagates in 3D — AP height shifts the vertical distance component
+`Δz` used in `propagation.py`. Relevant mainly for multi-floor analysis and for repeaters placed
+at mid-height. Low priority until router/repeater model selector is done (they share the AP dialog).
+
+### SSID + frequency band selection
+Currently the SSID combo filters by network name regardless of band.
+Add a **frequency/band** selector (2.4 GHz / 5 GHz / 6 GHz / All) next to the SSID combo.
+The filter would apply to both the 2D heatmap and the vertical section.
+Note: a single SSID can broadcast on multiple bands simultaneously (band steering);
+filtering by band lets users compare coverage per radio independently.
+Data already available in `MeasurementScan.frequency_mhz` (or derive band from it).
 
 ---
 
 ## Next steps
 
 V3 complete. Continue with **Post-V3** items — router/box model selector (DB already ready),
-AP placement advisor, or PyInstaller packaging.
+AP placement advisor, SSID+frequency filter, or PyInstaller packaging.

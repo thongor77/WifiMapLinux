@@ -82,6 +82,7 @@ _T: dict[str, dict[str, str]] = {
         # ── Vertical section ──────────────────────────────────────────────────
         "status_section_mode":      "Coupe : cliquez 2 points sur le plan pour définir la ligne de coupe",
         "status_section_updated":   "Coupe mise à jour — {length:.1f} m · {n} étage(s)",
+        "section_draw_hint":        "Tracez une ligne de coupe sur le plan",
 
         # ── Virtual AP ────────────────────────────────────────────────────────
         "status_ap_place_mode":     "AP virtuel : cliquez sur la position du point d'accès",
@@ -309,6 +310,7 @@ _T: dict[str, dict[str, str]] = {
         # ── Vertical section ──────────────────────────────────────────────────
         "status_section_mode":      "Section: click 2 points on the plan to define the cut line",
         "status_section_updated":   "Section updated — {length:.1f} m · {n} floor(s)",
+        "section_draw_hint":        "Draw a cut line on the floor plan",
 
         # ── Virtual AP ────────────────────────────────────────────────────────
         "status_ap_place_mode":     "Virtual AP: click on the access point position",

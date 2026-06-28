@@ -4,6 +4,7 @@ from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
 from ..services.interpolation import grid_to_rgba
+from ..services.i18n import tr
 
 
 class SectionView(QWidget):
@@ -105,7 +106,7 @@ class SectionView(QWidget):
             p.setFont(font)
             p.setPen(QColor("#555577"))
             p.drawText(0, 0, W, H, Qt.AlignmentFlag.AlignCenter,
-                       "Tracez une ligne de coupe sur le plan")
+                       tr("section_draw_hint"))
             return
 
         total_h_m = sum(b[1] for b in self._bands)
