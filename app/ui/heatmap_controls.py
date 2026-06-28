@@ -96,12 +96,17 @@ class HeatmapControls(QWidget):
         layout.addStretch()
 
     def populate_ssids(self, ssids: list[str]):
+        current = self.selected_ssid()
         self._ssid_combo.blockSignals(True)
         self._ssid_combo.clear()
         self._ssid_combo.addItem(tr("combo_best_signal"), userData="")
         for ssid in sorted(set(ssids)):
             if ssid:
                 self._ssid_combo.addItem(ssid, userData=ssid)
+        if current:
+            idx = self._ssid_combo.findData(current)
+            if idx >= 0:
+                self._ssid_combo.setCurrentIndex(idx)
         self._ssid_combo.blockSignals(False)
 
     def _on_ssid_changed(self, _idx: int):
