@@ -1,6 +1,6 @@
 # Maintainer: thongor77 <magetriste@proton.me>
 pkgname=wifimaplinux
-pkgver=2.0.1
+pkgver=3.0.0
 pkgrel=1
 pkgdesc='Multi-floor residential Wi-Fi mapping tool for Linux'
 arch=(any)
