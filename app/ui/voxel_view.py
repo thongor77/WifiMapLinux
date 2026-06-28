@@ -34,7 +34,8 @@ def _load_plan_texture(image_path: str) -> np.ndarray | None:
         arr = np.array(img, dtype=np.uint8)
         white = (arr[:, :, 0] > 210) & (arr[:, :, 1] > 210) & (arr[:, :, 2] > 210)
         arr[:, :, 3] = np.where(white, 0, 180)
-        return arr
+        # vispy Image maps row 0 → Y=0 (bottom of scene), so flip to keep top↑
+        return np.ascontiguousarray(arr[::-1])
     except Exception:
         return None
 
