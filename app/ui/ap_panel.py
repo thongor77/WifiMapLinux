@@ -89,8 +89,11 @@ class APPanel(QWidget):
 
     def _refresh(self):
         selected_id = self._selected_ap_id()
+        self._list.blockSignals(True)
         self._list.clear()
         if self._floor_id is None:
+            self._list.blockSignals(False)
+            self._on_selection()
             return
         with get_session() as session:
             aps = session.exec(
@@ -103,6 +106,7 @@ class APPanel(QWidget):
                 self._list.addItem(item)
                 if ap.id == selected_id:
                     self._list.setCurrentItem(item)
+        self._list.blockSignals(False)
         self._on_selection()
 
     def _selected_ap_id(self) -> int | None:

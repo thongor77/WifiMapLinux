@@ -1,5 +1,6 @@
 from pathlib import Path
 from sqlalchemy import text
+from sqlalchemy.pool import NullPool
 from sqlmodel import create_engine, Session, SQLModel
 
 
@@ -30,7 +31,14 @@ def init_db(data_dir: Path) -> None:
     global _engine, DATA_DIR
     DATA_DIR = data_dir
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    _engine = create_engine(f"sqlite:///{DATA_DIR / 'wifimaplinux.db'}")
+    # NullPool: each Session opens its own connection and closes it on exit.
+    # Avoids SQLAlchemy's SingletonThreadPool sharing one connection across
+    # concurrent sessions (ap_panel, measurement_panel, heatmap, voxel all
+    # open sessions simultaneously during floor selection).
+    _engine = create_engine(
+        f"sqlite:///{DATA_DIR / 'wifimaplinux.db'}",
+        poolclass=NullPool,
+    )
     from app.models.building import Building  # noqa: register with metadata
     from app.models.floor import Floor, FloorPlan  # noqa
     from app.models.measurement import MeasurementPoint, MeasurementScan  # noqa

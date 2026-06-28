@@ -419,34 +419,60 @@ class MainWindow(QMainWindow):
             )
 
     def _on_floor_selected(self, floor_id: int):
+        from PySide6.QtCore import QTimer as _QTimer
         self._populate_floor_tabs(floor_id)
         self._current_floor_id = floor_id
         self._current_measured_grid = None
         self._current_sim_grid = None
+
+        # Step 1: read floor label in its own session
         with get_session() as session:
             floor = session.get(Floor, floor_id)
             floor_label = floor.label if floor else ""
-            self.ap_panel.load_floor(floor_id, floor_label)
-            self.measurement_panel.load_floor(floor_id, floor_label)
+
+        # Step 2: load side panels (they open their own sessions internally)
+        self.ap_panel.load_floor(floor_id, floor_label)
+        self.measurement_panel.load_floor(floor_id, floor_label)
+
+        # Step 3: read floor plan metadata
+        img_path = None
+        scale = None
+        cal_dist = None
+        with get_session() as session:
             fp = session.exec(
                 select(FloorPlan).where(FloorPlan.floor_id == floor_id)
             ).first()
             if fp:
-                self.floor_plan_widget.load_floorplan(fp.image_path)
-                self._load_measurement_markers(floor_id, session)
+                img_path = fp.image_path
+                scale = fp.scale_px_per_m
+                cal_dist = fp.cal_dist_m
+
+        # Step 4: render floor plan, markers, and APs — each in its own session
+        if img_path:
+            self.floor_plan_widget.load_floorplan(img_path)
+            self._reload_measurement_markers()
+            # Pattern identical to _on_ap_panel_changed (which always works)
+            self.floor_plan_widget.clear_ap_markers()
+            with get_session() as session:
                 self._load_ap_markers(floor_id, session)
-                self._populate_ssids(floor_id, session)
-                if self.heatmap_controls.is_active():
-                    self._compute_heatmap(fp)
-                if fp.scale_px_per_m:
-                    self.statusBar().showMessage(
-                        tr("status_scale", scale=fp.scale_px_per_m, dist=fp.cal_dist_m)
-                    )
-                else:
-                    self.statusBar().showMessage(tr("status_plan_no_cal"))
+            self._reload_ssids(floor_id)
+            if scale:
+                self.statusBar().showMessage(
+                    tr("status_scale", scale=scale, dist=cal_dist)
+                )
             else:
-                self.floor_plan_widget.clear()
-                self.statusBar().showMessage(tr("status_no_plan"))
+                self.statusBar().showMessage(tr("status_plan_no_cal"))
+        else:
+            self.floor_plan_widget.clear()
+            self.statusBar().showMessage(tr("status_no_plan"))
+
+        # Safety: cancel any AP highlight started during ap_panel.load_floor
+        # (deferred Qt selection signal may fire on the next event-loop tick)
+        _QTimer.singleShot(0, self.floor_plan_widget.stop_highlight_ap)
+
+        # Step 5: heatmap / sim / 3D — all after floor plan is fully loaded
+        if self.heatmap_controls.is_active():
+            self._refresh_heatmap()
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
         if self.heatmap_controls.view_3d_is_active():
@@ -486,6 +512,20 @@ class MainWindow(QMainWindow):
             ).all()
             ssids.extend(s.ssid for s in scans if s.ssid)
         self.heatmap_controls.populate_ssids(list(set(ssids)))
+
+    def _reload_ssids(self, floor_id: int):
+        with get_session() as session:
+            pts = session.exec(
+                select(MeasurementPoint).where(MeasurementPoint.floor_id == floor_id)
+            ).all()
+            ssids: list[str] = []
+            for pt in pts:
+                scans = session.exec(
+                    select(MeasurementScan)
+                    .where(MeasurementScan.measurement_point_id == pt.id)
+                ).all()
+                ssids.extend(s.ssid for s in scans if s.ssid)
+            self.heatmap_controls.populate_ssids(list(set(ssids)))
 
     # ── Import plan ───────────────────────────────────────────────────────
 
@@ -929,6 +969,12 @@ class MainWindow(QMainWindow):
         self._center_stack.setCurrentIndex(1 if checked else 0)
         if checked:
             self._refresh_voxel()
+        elif self._current_floor_id is not None:
+            # Reload AP markers when returning to 2D — they may have been lost
+            # if a floor reload occurred while the 3D view was active.
+            self.floor_plan_widget.clear_ap_markers()
+            with get_session() as session:
+                self._load_ap_markers(self._current_floor_id, session)
 
     def _refresh_voxel(self):
         if self._current_floor_id is None:
@@ -1312,11 +1358,14 @@ class MainWindow(QMainWindow):
     def _compute_heatmap(self, fp: FloorPlan):
         from ..services.interpolation import idw
         ssid_filter = self.heatmap_controls.selected_ssid()
+        floor_id = fp.floor_id
+        width_px = fp.width_px
+        height_px = fp.height_px
 
         with get_session() as session:
             pts = session.exec(
                 select(MeasurementPoint)
-                .where(MeasurementPoint.floor_id == fp.floor_id)
+                .where(MeasurementPoint.floor_id == floor_id)
             ).all()
 
             points: list[tuple[float, float, float]] = []
@@ -1336,10 +1385,10 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(tr("status_heatmap_min_pts"))
             return
 
-        grid = idw(points, fp.width_px, fp.height_px)
+        grid = idw(points, width_px, height_px)
         self._current_measured_grid = grid
         self.floor_plan_widget.set_heatmap(
-            grid, fp.width_px, fp.height_px,
+            grid, width_px, height_px,
             opacity=self.heatmap_controls.opacity(),
         )
         self.statusBar().showMessage(
