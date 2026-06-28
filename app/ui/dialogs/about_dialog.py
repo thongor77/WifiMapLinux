@@ -34,7 +34,7 @@ class AboutDialog(QDialog):
 
         ver_lbl = QLabel(tr("about_version", version=__version__))
         ver_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        ver_lbl.setStyleSheet("font-size: 12px; color: palette(mid); margin-bottom: 6px;")
+        ver_lbl.setStyleSheet("font-size: 12px; color: #888888; margin-bottom: 6px;")
         root.addWidget(ver_lbl)
 
         desc_lbl = QLabel(tr("about_description"))
