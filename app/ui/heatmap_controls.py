@@ -44,6 +44,7 @@ class HeatmapControls(QWidget):
     ssid_changed = Signal(str)
     opacity_changed = Signal(int)   # 0-100
     section_requested = Signal()
+    view_3d_toggled = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -87,6 +88,11 @@ class HeatmapControls(QWidget):
         self._section_btn.clicked.connect(self.section_requested)
         layout.addWidget(self._section_btn)
 
+        self._view3d_check = QCheckBox(tr("chk_view3d"))
+        self._view3d_check.setToolTip(tr("tooltip_view3d"))
+        self._view3d_check.toggled.connect(self.view_3d_toggled)
+        layout.addWidget(self._view3d_check)
+
         layout.addStretch()
 
     def populate_ssids(self, ssids: list[str]):
@@ -115,3 +121,6 @@ class HeatmapControls(QWidget):
 
     def sim_is_active(self) -> bool:
         return self._sim_check.isChecked()
+
+    def view_3d_is_active(self) -> bool:
+        return self._view3d_check.isChecked()

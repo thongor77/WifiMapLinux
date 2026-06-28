@@ -12,7 +12,7 @@
 | **Arch phase** | Architecture, data models, technical decisions | ✅ Done |
 | **V1** | Floor plan import · Wi-Fi measurements · 2D heatmap · Multi-floor · Vertical section | ✅ Done |
 | **V2** | Simulation · Advanced interpolation · Export | ✅ Done |
-| **V3** | 3D visualisation | 📋 Planned |
+| **V3** | 3D visualisation | ✅ Done |
 | **Post-V3** | AP placement advisor · PyInstaller packaging | 💭 Deferred |
 
 ---
@@ -67,17 +67,22 @@ INC-04 resolved → ADR-006: Option A (per-floor 2D IDW + vertical linear interp
 
 ---
 
-## V3 — 3D visualisation
+## V3 — 3D visualisation ✅
 
-Technology to be decided:
-- Qt3D (native PySide6) — clean integration but complex API
-- vispy — lightweight Python OpenGL library, good for volume data
-- matplotlib 3D — simple but limited and slow for interactivity
+Technology: **vispy** (OpenGL Python, PySide6 backend).
 
-Planned scope:
-- 3D voxel volume of the house (2D grids per floor stacked)
-- Navigation: rotation, floor selection, transparency
-- Synchronisation with the per-floor 2D view
+Implemented:
+- `app/services/voxel.py` — `build_voxel_grid()`: stacks per-floor 2D IDW/LDPL grids
+  into a `(Z=40, G=150, G=150)` voxel volume with vertical lerp between floor midpoints
+  (same ADR-006 algorithm as SectionView).
+- `app/ui/voxel_view.py` — `VoxelView`: vispy SceneCanvas + TurntableCamera embedded in
+  a QWidget; `scene.visuals.Volume` with `method='translucent'`; colormap matches the 2D
+  heatmap palette (`_STOPS`).
+- Bascule 2D↔3D via `QStackedWidget` in MainWindow; "3D View" checkbox in HeatmapControls.
+- Sources: measured (IDW) or simulated (LDPL) — follows the Heatmap/Simulation toggles.
+- Navigation: mouse rotation (TurntableCamera), scroll zoom.
+- Known limitation: inter-floor XY alignment offsets are not applied to the voxel grid
+  (floors assumed co-registered). Use the vertical section view for precise cross-floor analysis.
 
 ---
 
@@ -104,4 +109,5 @@ Planned scope:
 
 ## Next steps
 
-V2 complete. Start **V3** (3D visualisation) or **Post-V3** (weak zone advisor) depending on priority.
+V3 complete. Continue with **Post-V3** items — router/box model selector (DB already ready),
+AP placement advisor, or PyInstaller packaging.

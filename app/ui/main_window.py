@@ -5,9 +5,10 @@ from PySide6.QtCore import Qt, QPointF, QThread, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QFileDialog, QInputDialog, QMainWindow, QMessageBox,
-    QSplitter, QStatusBar, QVBoxLayout, QWidget,
+    QSplitter, QStackedWidget, QStatusBar, QVBoxLayout, QWidget,
 )
 from .section_view import SectionView
+from .voxel_view import VoxelView
 from sqlmodel import select
 
 from ..models.building import Building
@@ -74,7 +75,12 @@ class MainWindow(QMainWindow):
         plan_section_splitter.addWidget(self.floor_plan_widget)
         plan_section_splitter.addWidget(self.section_view)
         plan_section_splitter.setSizes([540, 160])
-        right_layout.addWidget(plan_section_splitter, stretch=1)
+
+        self.voxel_view = VoxelView()
+        self._center_stack = QStackedWidget()
+        self._center_stack.addWidget(plan_section_splitter)   # index 0 — 2D
+        self._center_stack.addWidget(self.voxel_view)         # index 1 — 3D
+        right_layout.addWidget(self._center_stack, stretch=1)
 
         self.heatmap_controls = HeatmapControls()
         right_layout.addWidget(self.heatmap_controls)
@@ -127,6 +133,7 @@ class MainWindow(QMainWindow):
         self.heatmap_controls.ssid_changed.connect(self._on_heatmap_ssid_changed)
         self.heatmap_controls.opacity_changed.connect(self._on_heatmap_opacity)
         self.heatmap_controls.section_requested.connect(self._on_section_requested)
+        self.heatmap_controls.view_3d_toggled.connect(self._on_view_3d_toggled)
         self.floor_plan_widget.section_line_changed.connect(self._on_section_line_changed)
 
     def _setup_menu(self):
@@ -295,6 +302,7 @@ class MainWindow(QMainWindow):
         self.floor_tab_bar.populate([])
         self.floor_plan_widget.clear()
         self.section_view.update_section([], 0)
+        self.voxel_view.clear()
         self.ap_panel.clear()
         self.measurement_panel.clear()
         self.statusBar().showMessage("")
@@ -312,6 +320,7 @@ class MainWindow(QMainWindow):
         self.floor_tab_bar.populate([])
         self.floor_plan_widget.clear()
         self.section_view.update_section([], 0)
+        self.voxel_view.clear()
         self.ap_panel.clear()
         self.measurement_panel.clear()
         self.statusBar().showMessage("")
@@ -440,6 +449,8 @@ class MainWindow(QMainWindow):
                 self.statusBar().showMessage(tr("status_no_plan"))
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
 
     def _load_ap_markers(self, floor_id: int, session):
         from ..models.access_point import AccessPoint
@@ -645,6 +656,8 @@ class MainWindow(QMainWindow):
         if self.heatmap_controls.is_active():
             self._refresh_heatmap()
         self._refresh_section()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
 
         n = len(networks)
         self.statusBar().showMessage(tr("status_measure_saved", n=n, best=best_signal))
@@ -764,11 +777,15 @@ class MainWindow(QMainWindow):
             self._refresh_heatmap()
         else:
             self.floor_plan_widget.clear_heatmap()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
 
     def _on_heatmap_ssid_changed(self, _ssid: str):
         if self.heatmap_controls.is_active():
             self._refresh_heatmap()
         self._refresh_section()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
 
     def _on_heatmap_opacity(self, value: int):
         opacity = value / 100.0
@@ -871,7 +888,9 @@ class MainWindow(QMainWindow):
         if floor_id == self._current_floor_id:
             self._reload_measurement_markers()
             if self.heatmap_controls.heatmap_is_active():
-                self._refresh_measured_heatmap()
+                self._refresh_heatmap()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
 
     def _on_measurement_selected(self, x: float, y: float):
         self.floor_plan_widget.center_on(x, y)
@@ -901,6 +920,145 @@ class MainWindow(QMainWindow):
             self._load_ap_markers(floor_id, session)
         if self.heatmap_controls.sim_is_active():
             self._refresh_sim_heatmap()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
+
+    # ── 3D voxel view ─────────────────────────────────────────────────────
+
+    def _on_view_3d_toggled(self, checked: bool):
+        self._center_stack.setCurrentIndex(1 if checked else 0)
+        if checked:
+            self._refresh_voxel()
+
+    def _refresh_voxel(self):
+        if self._current_floor_id is None:
+            self.voxel_view.clear()
+            return
+
+        import numpy as np
+        from ..services.interpolation import idw
+        from ..services.voxel import build_voxel_grid
+
+        use_sim = self.heatmap_controls.sim_is_active()
+
+        with get_session() as session:
+            floor = session.get(Floor, self._current_floor_id)
+            if not floor:
+                self.voxel_view.clear()
+                return
+
+            floors = session.exec(
+                select(Floor)
+                .where(Floor.building_id == floor.building_id)
+                .order_by(Floor.index)
+            ).all()
+
+            ssid_filter = self.heatmap_controls.selected_ssid()
+            floor_grids = []
+            floor_heights_m = [f.height_m for f in floors]
+
+            if use_sim:
+                from ..models.access_point import AccessPoint
+                from ..services.propagation import APSimInfo, simulate_floor
+
+                abs_off: dict[int, tuple[float, float]] = {}
+                abs_off[floors[0].id] = (0.0, 0.0)
+                for i in range(1, len(floors)):
+                    px, py = abs_off[floors[i - 1].id]
+                    abs_off[floors[i].id] = (px + floors[i].offset_x_m, py + floors[i].offset_y_m)
+
+                z_heights: dict[int, float] = {}
+                z = 0.0
+                for f in floors:
+                    z_heights[f.id] = z
+                    z += f.height_m
+
+                floor_by_id = {f.id: f for f in floors}
+                all_floor_ids = [f.id for f in floors]
+
+                aps_db = session.exec(
+                    select(AccessPoint).where(AccessPoint.floor_id.in_(all_floor_ids))
+                ).all()
+
+                ap_fps: dict[int, FloorPlan | None] = {}
+                for ap in aps_db:
+                    if ap.floor_id not in ap_fps:
+                        ap_fps[ap.floor_id] = session.exec(
+                            select(FloorPlan).where(FloorPlan.floor_id == ap.floor_id)
+                        ).first()
+
+                ap_infos: list[APSimInfo] = []
+                for ap in aps_db:
+                    ap_fp = ap_fps.get(ap.floor_id)
+                    if not ap_fp or not ap_fp.scale_px_per_m:
+                        continue
+                    ap_floor = floor_by_id[ap.floor_id]
+                    ox, oy = abs_off[ap.floor_id]
+                    ap_infos.append(APSimInfo(
+                        bx_m=ox + ap.x_px * ap_floor.align_scale_x / ap_fp.scale_px_per_m,
+                        by_m=oy + ap.y_px * ap_floor.align_scale_y / ap_fp.scale_px_per_m,
+                        z_m=z_heights[ap.floor_id],
+                        floor_index=ap_floor.index,
+                        tx_dbm=ap.tx_power_dbm,
+                        freq_mhz=ap.frequency_mhz,
+                        faf_db=ap_floor.floor_attenuation_db,
+                    ))
+
+                if not ap_infos:
+                    self.voxel_view.clear()
+                    return
+
+                for target_floor in floors:
+                    fp = session.exec(
+                        select(FloorPlan).where(FloorPlan.floor_id == target_floor.id)
+                    ).first()
+                    if not fp or not fp.scale_px_per_m:
+                        floor_grids.append(None)
+                        continue
+                    tox, toy = abs_off[target_floor.id]
+                    tz = z_heights[target_floor.id]
+                    eff_scale_x = fp.scale_px_per_m / target_floor.align_scale_x
+                    eff_scale_y = fp.scale_px_per_m / target_floor.align_scale_y
+                    grid = simulate_floor(
+                        ap_infos, target_floor.index, tz, tox, toy, eff_scale_x,
+                        fp.width_px, fp.height_px, target_scale_y=eff_scale_y,
+                    )
+                    floor_grids.append(grid)
+            else:
+                for target_floor in floors:
+                    fp = session.exec(
+                        select(FloorPlan).where(FloorPlan.floor_id == target_floor.id)
+                    ).first()
+                    if not fp:
+                        floor_grids.append(None)
+                        continue
+                    pts = session.exec(
+                        select(MeasurementPoint)
+                        .where(MeasurementPoint.floor_id == target_floor.id)
+                    ).all()
+                    points: list[tuple[float, float, float]] = []
+                    for pt in pts:
+                        scans = session.exec(
+                            select(MeasurementScan)
+                            .where(MeasurementScan.measurement_point_id == pt.id)
+                        ).all()
+                        relevant = [
+                            s.signal_dbm for s in scans
+                            if not ssid_filter or s.ssid == ssid_filter
+                        ]
+                        if relevant:
+                            points.append((pt.x_px, pt.y_px, max(relevant)))
+                    if len(points) < 2:
+                        floor_grids.append(None)
+                        continue
+                    grid = idw(points, fp.width_px, fp.height_px)
+                    floor_grids.append(grid)
+
+        voxels, z_total_m = build_voxel_grid(floor_grids, floor_heights_m)
+        if np.all(np.isnan(voxels)):
+            self.voxel_view.clear()
+        else:
+            self.voxel_view.set_volume(voxels, z_total_m)
 
     # ── Simulation heatmap ────────────────────────────────────────────────
 
@@ -909,6 +1067,8 @@ class MainWindow(QMainWindow):
             self._refresh_sim_heatmap()
         else:
             self.floor_plan_widget.clear_sim_heatmap()
+        if self.heatmap_controls.view_3d_is_active():
+            self._refresh_voxel()
 
     def _refresh_sim_heatmap(self):
         if self._current_floor_id is None:

@@ -12,6 +12,7 @@ depends=(
     python-numpy
     python-pillow
     python-sqlmodel
+    python-vispy
     iw
 )
 makedepends=(

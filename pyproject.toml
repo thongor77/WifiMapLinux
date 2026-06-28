@@ -15,6 +15,7 @@ dependencies = [
     "sqlmodel>=0.0.16",
     "numpy>=1.26.0",
     "pillow>=10.0.0",
+    "vispy>=0.14.0",
 ]
 
 [project.urls]

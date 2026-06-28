@@ -141,6 +141,9 @@ _T: dict[str, dict[str, str]] = {
         "btn_section":              "Coupe ↕",
         "tooltip_section":          "Tracer une ligne de coupe verticale",
         "combo_best_signal":        "Meilleur signal",
+        "chk_view3d":               "Vue 3D",
+        "tooltip_view3d":           "Afficher le volume Wi-Fi 3D de la maison (rotation souris, zoom molette)",
+        "voxel_empty":              "Activez la Heatmap ou la Simulation puis cochez Vue 3D",
 
         # ── AP panel ──────────────────────────────────────────────────────────
         "panel_aps_title":          "APs virtuels",
@@ -208,7 +211,7 @@ _T: dict[str, dict[str, str]] = {
         "about_description":        "Outil de cartographie Wi-Fi résidentiel multi-étages pour Linux",
         "about_version":            "Version {version}",
         "about_tech_title":         "Technologies",
-        "about_tech_body":          "Python 3.11 · PySide6 (Qt6) · NumPy · SQLite · Pillow",
+        "about_tech_body":          "Python 3.11 · PySide6 (Qt6) · NumPy · SQLite · Pillow · vispy",
         "about_github_btn":         "thongor77/WifiMapLinux",
 
         # ── Help dialog ───────────────────────────────────────────────────────
@@ -225,6 +228,7 @@ _T: dict[str, dict[str, str]] = {
         "help_topic_section":       "Coupe verticale",
         "help_topic_alignment":     "Alignement inter-étages",
         "help_topic_export":        "Export",
+        "help_topic_view3d":        "Vue 3D",
     },
 
     "en": {
@@ -364,6 +368,9 @@ _T: dict[str, dict[str, str]] = {
         "btn_section":              "Section ↕",
         "tooltip_section":          "Draw a vertical cross-section line",
         "combo_best_signal":        "Best signal",
+        "chk_view3d":               "3D View",
+        "tooltip_view3d":           "Show the 3D Wi-Fi volume of the building (mouse rotation, scroll zoom)",
+        "voxel_empty":              "Enable Heatmap or Simulation then tick 3D View",
 
         # ── AP panel ──────────────────────────────────────────────────────────
         "panel_aps_title":          "Virtual APs",
@@ -431,7 +438,7 @@ _T: dict[str, dict[str, str]] = {
         "about_description":        "Multi-floor residential Wi-Fi mapping tool for Linux",
         "about_version":            "Version {version}",
         "about_tech_title":         "Technologies",
-        "about_tech_body":          "Python 3.11 · PySide6 (Qt6) · NumPy · SQLite · Pillow",
+        "about_tech_body":          "Python 3.11 · PySide6 (Qt6) · NumPy · SQLite · Pillow · vispy",
         "about_github_btn":         "thongor77/WifiMapLinux",
 
         # ── Help dialog ───────────────────────────────────────────────────────
@@ -448,6 +455,7 @@ _T: dict[str, dict[str, str]] = {
         "help_topic_section":       "Vertical section",
         "help_topic_alignment":     "Inter-floor alignment",
         "help_topic_export":        "Export",
+        "help_topic_view3d":        "3D View",
     },
 }
 

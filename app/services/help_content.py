@@ -327,6 +327,49 @@ _CONTENT: dict[str, dict[str, dict]] = {
             ],
         },
     },
+
+    "view3d": {
+        "fr": {
+            "desc": (
+                "La vue 3D affiche le volume Wi-Fi de toute la maison sous forme de voxels "
+                "colorés (même palette que la heatmap 2D). Elle est construite en empilant "
+                "les grilles IDW ou LDPL de chaque étage et en interpolant verticalement entre "
+                "les midpoints d'étage (même algorithme que la coupe verticale V2.2)."
+            ),
+            "steps": [
+                "Activer la heatmap (mesurée) ou la simulation dans la barre en bas.",
+                "Cocher 'Vue 3D' dans la barre de contrôle.",
+                "La vue 2D (plan + coupe) est remplacée par le volume 3D.",
+                "Faire tourner avec la souris (clic gauche), zoomer avec la molette.",
+                "Décocher 'Vue 3D' pour revenir à la vue 2D.",
+            ],
+            "tips": [
+                "La source de données (mesurée ou simulée) suit les cases 'Heatmap' et 'Simulation'.",
+                "Un étage sans mesure est traversé par interpolation verticale depuis ses voisins.",
+                "Le volume n'applique pas les décalages XY inter-étages — utiliser la coupe verticale pour l'analyse précise.",
+            ],
+        },
+        "en": {
+            "desc": (
+                "The 3D view displays the Wi-Fi volume of the entire building as coloured voxels "
+                "(same palette as the 2D heatmap). It is built by stacking the IDW or LDPL grids "
+                "of each floor and interpolating vertically between floor midpoints (same algorithm "
+                "as the V2.2 vertical section)."
+            ),
+            "steps": [
+                "Enable the heatmap (measured) or the simulation in the bottom bar.",
+                "Tick '3D View' in the control bar.",
+                "The 2D view (plan + section) is replaced by the 3D volume.",
+                "Rotate with the mouse (left click), zoom with the scroll wheel.",
+                "Untick '3D View' to return to the 2D view.",
+            ],
+            "tips": [
+                "The data source (measured or simulated) follows the 'Heatmap' and 'Simulation' checkboxes.",
+                "A floor without measurements is traversed by vertical interpolation from its neighbours.",
+                "The volume does not apply inter-floor XY offsets — use the vertical section for precise analysis.",
+            ],
+        },
+    },
 }
 
 _TOPICS_ORDER = [
@@ -338,6 +381,7 @@ _TOPICS_ORDER = [
     "section",
     "alignment",
     "export",
+    "view3d",
 ]
 
 
