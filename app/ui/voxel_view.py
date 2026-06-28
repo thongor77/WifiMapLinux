@@ -151,7 +151,11 @@ class VoxelView(QWidget):
             if tex is None:
                 continue
 
-            img_vis = VispyImage(tex, parent=self._view.scene)
+            # method='subdivide' tessellates the quad → perspective-correct in 3D
+            img_vis = VispyImage(tex, method='subdivide', parent=self._view.scene)
+            # Alpha blend, no depth write, double-sided so the plane is
+            # visible regardless of camera orientation.
+            img_vis.set_gl_state('translucent', depth_test=False, cull_face=False)
 
             # The volume after STTransform spans Z ∈ [0, G].
             # The plan at z_mid_frac sits at Z_world = z_mid_frac * G.
